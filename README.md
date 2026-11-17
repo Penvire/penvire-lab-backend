@@ -19,7 +19,7 @@ Java 25, Quarkus and Gradle, with devenv as the development environment.
 ## Related
 
 - [penvire-lab-contracts](https://github.com/Penvire/penvire-lab-contracts): API and event contracts
-- [penvire-lab-client](https://github.com/Penvire/penvire-lab-client): web UI
+- [penvire-lab-clients](https://github.com/Penvire/penvire-lab-clients): web, desktop and mobile apps
 
 ## License
 
