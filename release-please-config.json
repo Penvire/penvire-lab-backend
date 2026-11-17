@@ -2,8 +2,26 @@
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "release-type": "simple",
   "bump-minor-pre-major": true,
-  "include-component-in-tag": false,
+  "initial-version": "0.1.0",
+  "include-component-in-tag": true,
   "packages": {
-    ".": { "component": "backend" }
+    "services/identity": {
+      "component": "identity"
+    },
+    "services/tenant": {
+      "component": "tenant"
+    },
+    "services/engagement": {
+      "component": "engagement"
+    },
+    "services/evidence": {
+      "component": "evidence"
+    },
+    "services/audit": {
+      "component": "audit"
+    },
+    "services/bff": {
+      "component": "bff"
+    }
   }
 }

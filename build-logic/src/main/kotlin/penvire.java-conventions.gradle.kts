@@ -5,6 +5,10 @@ plugins {
 
 group = "com.penvire.lab"
 
+// release-please writes each service's version to its version.txt.
+val versionFile = layout.projectDirectory.file("version.txt").asFile
+version = if (versionFile.exists()) versionFile.readText().trim() else "0.0.0-SNAPSHOT"
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(25)
