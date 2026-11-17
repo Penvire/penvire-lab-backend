@@ -13,6 +13,7 @@ rootProject.name = "penvire-lab-backend"
 
 // Libs
 include(":libs:observability")
+include(":libs:problem")
 
 // Services
 include(":services:identity")
