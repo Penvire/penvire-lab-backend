@@ -14,18 +14,44 @@ services/<service>/     one Quarkus service each, hexagonal:
     application/        use cases and ports
     adapter/in/         REST
     adapter/out/        database, Kafka, other services
-infrastructure/local/   local Traefik, TLS and compose files
+libs/                   shared libraries, created when a second user appears
+infrastructure/local/   Traefik, TLS and the observability stack
 docs/                   charter, architecture, adr/, tracks/, agents/
 GLOSSARY.md             domain vocabulary
 ```
 
 ## Development environment
 
-Enter the environment with `devenv shell`, or run `direnv allow` once. It provides Java 25 and Gradle 9 (running on JDK 25). Always run tools through it.
+Enter the environment with `devenv shell`, or run `direnv allow` once. It provides Java 25 and Gradle 9 (running on JDK 25). Always run tools through it. Quarkus Dev Services need Docker.
 
 Git hooks run automatically: a commit-msg hook rejects messages that are not Conventional Commits (the same rule as CI), and actionlint checks workflow files.
 
-Build and test everything with `./gradlew build`. Run one service in dev mode with `./gradlew :services:identity:quarkusDev` (API on port 8081; health on the management port at `http://localhost:9000/q/health`, never routed publicly). Use the wrapper, never a global `gradle`. New services: add `include(":services:<name>")` to `settings.gradle.kts` and a `build.gradle.kts` that applies `penvire.quarkus-service`, register `services/<name>` in `release-please-config.json` and `.release-please-manifest.json`, and add `services/<name>/version.txt` containing `0.0.0` (release-please only updates that file if it exists).
+### Local infrastructure
+
+`devenv up` (or `devenv up -d`, stop with `devenv processes down`) starts the shared infrastructure. Services run separately with `quarkusDev`.
+
+| What | Where |
+| --- | --- |
+| Traefik gateway (local CA, see `infrastructure/local/`) | `https://localhost:8443`, `$PENVIRE_HTTPS_PORT` if 8443 is taken |
+| OpenTelemetry Collector (OTLP) | `localhost:4317` (gRPC), `localhost:4318` (HTTP) |
+| Grafana (traces, logs, metrics; no login) | `http://localhost:3000` |
+| Tempo / Loki / Prometheus | `:3200` / `:3100` / `:9090` |
+
+Services send traces, metrics and logs to the collector without any configuration. Databases are not part of devenv: Quarkus Dev Services start one PostgreSQL container per service in dev mode and in tests.
+
+### Building and running
+
+- `./gradlew build`: compile, Error Prone with NullAway, tests, JaCoCo and Spotless. Use the wrapper, never a global `gradle`.
+- `./gradlew spotlessApply`: format with google-java-format before committing.
+- `./gradlew :services:identity:quarkusDev`: one service in dev mode with live reload. API on port 8081; health on the management port at `http://localhost:9000/q/health`, never routed publicly.
+
+Convention plugins in `build-logic/`:
+
+- `penvire.java-library`: every module. Error Prone and NullAway (JSpecify, `com.penvire`), Spotless, JaCoCo, Lombok.
+- `penvire.quarkus-library`: shared libraries in `libs/`. Quarkus BOM; `quarkusDev` disabled.
+- `penvire.quarkus-service`: services. REST, health, OpenTelemetry, MapStruct; shared config defaults in a generated `META-INF/microprofile-config.properties`.
+
+New services: add `include(":services:<name>")` to `settings.gradle.kts` and a `build.gradle.kts` that applies `penvire.quarkus-service`, give it its own HTTP and management ports in `application.properties`, register `services/<name>` in `release-please-config.json` and `.release-please-manifest.json`, and add `services/<name>/version.txt` containing `0.0.0` (release-please only updates that file if it exists).
 
 ## Rules
 

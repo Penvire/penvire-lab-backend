@@ -11,27 +11,24 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 class HealthTest {
 
-    @TestHTTPResource(value = "/health/live", management = true)
-    URL live;
+  @TestHTTPResource(value = "/health/live", management = true)
+  URL live;
 
-    @TestHTTPResource(value = "/health/ready", management = true)
-    URL ready;
+  @TestHTTPResource(value = "/health/ready", management = true)
+  URL ready;
 
-    @Test
-    void reportsLiveOnManagementPort() {
-        given().when().get(live)
-                .then().statusCode(200).body("status", equalTo("UP"));
-    }
+  @Test
+  void reportsLiveOnManagementPort() {
+    given().when().get(live).then().statusCode(200).body("status", equalTo("UP"));
+  }
 
-    @Test
-    void reportsReadyOnManagementPort() {
-        given().when().get(ready)
-                .then().statusCode(200).body("status", equalTo("UP"));
-    }
+  @Test
+  void reportsReadyOnManagementPort() {
+    given().when().get(ready).then().statusCode(200).body("status", equalTo("UP"));
+  }
 
-    @Test
-    void isNotServedOnApplicationPort() {
-        given().when().get("/q/health")
-                .then().statusCode(404);
-    }
+  @Test
+  void isNotServedOnApplicationPort() {
+    given().when().get("/q/health").then().statusCode(404);
+  }
 }

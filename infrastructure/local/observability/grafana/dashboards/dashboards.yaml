@@ -1,0 +1,11 @@
+# Dashboards from infrastructure/local/observability/dashboards, editable in
+# Grafana but reset on restart. Export changes back into the JSON files.
+apiVersion: 1
+
+providers:
+  - name: penvire
+    folder: Penvire
+    type: file
+    allowUiUpdates: true
+    options:
+      path: $PENVIRE_DASHBOARDS

@@ -1,0 +1,39 @@
+# Local log storage. Receives OTLP logs from the collector at /otlp.
+auth_enabled: false
+
+server:
+  http_listen_address: 127.0.0.1
+  http_listen_port: 3100
+  grpc_listen_address: 127.0.0.1
+  grpc_listen_port: 9097
+
+common:
+  path_prefix: ${DEVENV_STATE}/loki
+  replication_factor: 1
+  instance_addr: 127.0.0.1
+  ring:
+    kvstore:
+      store: inmemory
+  storage:
+    filesystem:
+      chunks_directory: ${DEVENV_STATE}/loki/chunks
+      rules_directory: ${DEVENV_STATE}/loki/rules
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+limits_config:
+  allow_structured_metadata: true
+
+compactor:
+  working_directory: ${DEVENV_STATE}/loki/compactor
+
+analytics:
+  reporting_enabled: false
