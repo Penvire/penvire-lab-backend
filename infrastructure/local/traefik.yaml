@@ -1,0 +1,24 @@
+# Traefik expands these paths at runtime; secrets never enter the Nix store.
+tls:
+  certificates:
+    - certFile: '{{ env "DEVENV_STATE" }}/tls/localhost.pem'
+      keyFile: '{{ env "DEVENV_STATE" }}/tls/localhost-key.pem'
+  stores:
+    default:
+      defaultCertificate:
+        certFile: '{{ env "DEVENV_STATE" }}/tls/localhost.pem'
+        keyFile: '{{ env "DEVENV_STATE" }}/tls/localhost-key.pem'
+  options:
+    default:
+      minVersion: VersionTLS12
+
+# Attach this transport to the identity service when its route is added.
+http:
+  serversTransports:
+    identity-mtls:
+      serverName: identity
+      rootCAs:
+        - '{{ env "DEVENV_STATE" }}/tls/ca/rootCA.pem'
+      certificates:
+        - certFile: '{{ env "DEVENV_STATE" }}/tls/traefik-client.pem'
+          keyFile: '{{ env "DEVENV_STATE" }}/tls/traefik-client-key.pem'

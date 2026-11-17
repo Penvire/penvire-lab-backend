@@ -1,0 +1,37 @@
+# Local trace storage. Receives OTLP from the collector only.
+server:
+  http_listen_address: 127.0.0.1
+  http_listen_port: 3200
+  grpc_listen_address: 127.0.0.1
+  grpc_listen_port: 9096
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 127.0.0.1:4417
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: ${DEVENV_STATE}/tempo/traces
+    wal:
+      path: ${DEVENV_STATE}/tempo/wal
+
+usage_report:
+  reporting_enabled: false
+
+# Tempo 3 defaults these to /var/tempo.
+live_store:
+  shutdown_marker_dir: ${DEVENV_STATE}/tempo/live-store/shutdown-marker
+  wal:
+    path: ${DEVENV_STATE}/tempo/live-store/traces
+
+block_builder:
+  wal:
+    path: ${DEVENV_STATE}/tempo/block-builder/traces
+
+backend_scheduler:
+  local_work_path: ${DEVENV_STATE}/tempo/backend-scheduler

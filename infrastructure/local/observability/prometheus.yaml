@@ -1,0 +1,11 @@
+# Metrics arrive over OTLP from the collector (--web.enable-otlp-receiver);
+# nothing needs to be scraped.
+global:
+  evaluation_interval: 15s
+
+otlp:
+  # Keep the attributes that identify a service as labels.
+  promote_resource_attributes:
+    - service.name
+    - service.version
+    - deployment.environment
