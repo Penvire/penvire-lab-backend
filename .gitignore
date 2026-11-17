@@ -1,0 +1,13 @@
+.codegraph/
+.devenv/
+.devenv.flake.nix
+.direnv/
+.pre-commit-config.yaml
+
+# Environment files
+.env
+
+# Gradle
+.gradle
+build
+.kotlin
