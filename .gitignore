@@ -2,6 +2,7 @@
 .devenv/
 .devenv.flake.nix
 .direnv/
+.idea/
 .pre-commit-config.yaml
 
 # Environment files

@@ -1,0 +1,6 @@
+[versions]
+quarkus = "3.40.1.2"
+
+[libraries]
+quarkus-bom = { module = "io.quarkus:quarkus-bom", version.ref = "quarkus" }
+quarkus-gradle-plugin = { module = "io.quarkus:gradle-application-plugin", version.ref = "quarkus" }

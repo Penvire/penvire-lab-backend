@@ -25,7 +25,7 @@ Enter the environment with `devenv shell`, or run `direnv allow` once. It provid
 
 Git hooks run automatically: a commit-msg hook rejects messages that are not Conventional Commits (the same rule as CI), and actionlint checks workflow files.
 
-There is no Gradle build yet. Once the wrapper exists, use `./gradlew build` and `./gradlew test`; never a global `gradle`.
+Build and test everything with `./gradlew build`. Run one service in dev mode with `./gradlew :services:identity:quarkusDev` (API on port 8081; health on the management port at `http://localhost:9000/q/health`, never routed publicly). Use the wrapper, never a global `gradle`. New services: add `include(":services:<name>")` to `settings.gradle.kts` and a `build.gradle.kts` that applies `penvire.quarkus-service`.
 
 ## Rules
 
