@@ -11,4 +11,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "penvire-lab-backend"
 
+// Libs
+include(":libs:observability")
+
+// Services
 include(":services:identity")
