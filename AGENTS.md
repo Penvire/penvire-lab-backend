@@ -25,7 +25,7 @@ Enter the environment with `devenv shell`, or run `direnv allow` once. It provid
 
 Git hooks run automatically: a commit-msg hook rejects messages that are not Conventional Commits (the same rule as CI), and actionlint checks workflow files.
 
-Build and test everything with `./gradlew build`. Run one service in dev mode with `./gradlew :services:identity:quarkusDev` (API on port 8081; health on the management port at `http://localhost:9000/q/health`, never routed publicly). Use the wrapper, never a global `gradle`. New services: add `include(":services:<name>")` to `settings.gradle.kts` and a `build.gradle.kts` that applies `penvire.quarkus-service`.
+Build and test everything with `./gradlew build`. Run one service in dev mode with `./gradlew :services:identity:quarkusDev` (API on port 8081; health on the management port at `http://localhost:9000/q/health`, never routed publicly). Use the wrapper, never a global `gradle`. New services: add `include(":services:<name>")` to `settings.gradle.kts` and a `build.gradle.kts` that applies `penvire.quarkus-service`, and register `services/<name>` in `release-please-config.json` and `.release-please-manifest.json`.
 
 ## Rules
 
@@ -34,6 +34,7 @@ Build and test everything with `./gradlew build`. Run one service in dev mode wi
 - Commits are GPG-signed; `main` rejects unsigned commits.
 - PR body: a one-paragraph summary, then a `## Test plan` section.
 - Releases are managed by release-please. Do not bump versions or edit `CHANGELOG.md` by hand.
+- The PR title becomes the changelog entry. Keep one user-facing change per PR. If a PR contains several, list every `feat` and `fix` on its own line in the PR description, between `BEGIN_COMMIT_OVERRIDE` and `END_COMMIT_OVERRIDE`; release-please uses that block instead of the title.
 
 ## Agent docs
 
