@@ -1,5 +1,6 @@
 package com.penvire.lab.jwt;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,7 +11,6 @@ import com.penvire.lab.jwt.jws.Rs256JwsVerifier;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Base64;
 import org.junit.jupiter.api.Test;
@@ -77,22 +77,24 @@ class Rs256JwsVerifierTest {
   }
 
   @Test
-  void rejectsUndersizedRsaKeys() throws GeneralSecurityException {
-    KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-    generator.initialize(1024);
-    var key = generator.generateKeyPair().getPublic();
+  void rejectsUndersizedRsaKeys() {
+    var key = new StubRsaKey(BigInteger.ONE.shiftLeft(2046).add(BigInteger.ONE));
 
-    assertThrows(
-        JwsVerificationException.class,
-        () -> verifier.verifySignature(new byte[] {1}, new byte[128], key));
+    var failure =
+        assertThrows(
+            JwsVerificationException.class,
+            () -> verifier.verifySignature(new byte[] {1}, new byte[256], key));
+
+    assertEquals("RSA keys must have at least 2048 bits", failure.getMessage());
   }
 
   @Test
   void translatesAnUnusableRsaKeyIntoAVerificationFailure() {
+    var key = new StubRsaKey(BigInteger.ONE.shiftLeft(2047).add(BigInteger.ONE));
     var failure =
         assertThrows(
             JwsVerificationException.class,
-            () -> verifier.verifySignature(new byte[] {1}, new byte[256], new InvalidRsaKey()));
+            () -> verifier.verifySignature(new byte[] {1}, new byte[256], key));
 
     assertInstanceOf(GeneralSecurityException.class, failure.getCause());
   }
@@ -105,10 +107,10 @@ class Rs256JwsVerifierTest {
     return Base64.getUrlDecoder().decode(parts[2]);
   }
 
-  private static final class InvalidRsaKey implements RSAPublicKey {
+  private record StubRsaKey(BigInteger modulus) implements RSAPublicKey {
     @Override
     public BigInteger getModulus() {
-      return BigInteger.ONE.shiftLeft(2047).add(BigInteger.ONE);
+      return modulus;
     }
 
     @Override
