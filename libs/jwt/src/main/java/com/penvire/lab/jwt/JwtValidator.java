@@ -1,13 +1,10 @@
 package com.penvire.lab.jwt;
 
-import com.fasterxml.jackson.core.StreamReadFeature;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.penvire.lab.jwt.jws.JwsDecoder;
 import com.penvire.lab.jwt.jws.JwsVerificationException;
 import com.penvire.lab.jwt.jws.JwsVerifier;
+import com.penvire.lab.jwt.jws.StrictJwtJson;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.time.Clock;
@@ -19,11 +16,6 @@ import java.util.Objects;
 
 public class JwtValidator {
   private static final int MAX_COMPACT_JWS_CHARS = 32 * 1024;
-  private static final ObjectMapper OBJECT_MAPPER =
-      JsonMapper.builder()
-          .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
-          .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-          .build();
 
   private final JwsDecoder decoder = new JwsDecoder();
   private final Map<String, JwsVerifier> signatureVerifiers;
@@ -214,7 +206,7 @@ public class JwtValidator {
 
   private JsonNode readClaims(byte[] payload) {
     try {
-      JsonNode claims = OBJECT_MAPPER.readTree(payload);
+      JsonNode claims = StrictJwtJson.read(payload);
 
       if (claims == null || !claims.isObject()) {
         throw new JwtVerificationException("JWT payload must be a JSON object");

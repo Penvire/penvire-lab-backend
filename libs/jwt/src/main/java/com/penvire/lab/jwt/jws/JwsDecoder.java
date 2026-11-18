@@ -1,21 +1,14 @@
 package com.penvire.lab.jwt.jws;
 
-import com.fasterxml.jackson.core.StreamReadFeature;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.penvire.lab.jwt.ParsedJws;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class JwsDecoder {
-  private static final ObjectMapper OBJECT_MAPPER =
-      JsonMapper.builder()
-          .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
-          .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-          .build();
+  private static final Base64.Decoder URL_DECODER = Base64.getUrlDecoder();
+  private static final Base64.Encoder URL_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
   public ParsedJws decode(String jwt) {
     if (jwt.isBlank()) {
@@ -28,21 +21,35 @@ public class JwsDecoder {
     }
 
     try {
-      Base64.Decoder decoder = Base64.getUrlDecoder();
+      byte[] headerBytes = decodeSegment(parts[0], 2 * 1024);
+      byte[] payload = decodeSegment(parts[1], 16 * 1024);
+      byte[] signature = decodeSegment(parts[2], 4 * 1024);
 
-      JsonNode header = OBJECT_MAPPER.readTree(decoder.decode(parts[0]));
-      if (header == null || !header.isObject()) {
+      JsonNode header = StrictJwtJson.read(headerBytes);
+      if (!header.isObject()) {
         throw new JwsVerificationException("JWS Header must be a JSON object.");
       }
 
-      byte[] payload = decoder.decode(parts[1]);
-      byte[] signature = decoder.decode(parts[2]);
-
       byte[] signingInput = (parts[0] + "." + parts[1]).getBytes(StandardCharsets.US_ASCII);
-
       return new ParsedJws(header, payload, signingInput, signature);
-    } catch (IllegalArgumentException | IOException e) {
-      throw new JwsVerificationException("Cannot decode compact JWS", e);
+    } catch (IllegalArgumentException | IOException exception) {
+      throw new JwsVerificationException("Cannot decode compact JWS", exception);
     }
+  }
+
+  private static byte[] decodeSegment(String segment, int maxBytes) {
+    int maxEncodedChars = (4 * maxBytes + 2) / 3;
+    if (segment.length() > maxEncodedChars) {
+      throw new JwsVerificationException("Compact JWS segment is too large");
+    }
+
+    byte[] decoded = URL_DECODER.decode(segment);
+    if (decoded.length > maxBytes) {
+      throw new JwsVerificationException("Compact JWS segment is too large");
+    }
+    if (!segment.equals(URL_ENCODER.encodeToString(decoded))) {
+      throw new JwsVerificationException("Compact JWS segment is not canonical base64url");
+    }
+    return decoded;
   }
 }
