@@ -1,17 +1,17 @@
-package com.penvire.lab.jwt.jws;
+package com.penvire.lab.jwt;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Objects;
 
 /** Parsed JWS data; parsing alone does not establish authenticity. */
-final class ParsedJws {
+public final class ParsedJws {
 
   private final JsonNode header;
   private final byte[] payload;
   private final byte[] signingInput;
   private final byte[] signature;
 
-  ParsedJws(JsonNode header, byte[] payload, byte[] signingInput, byte[] signature) {
+  public ParsedJws(JsonNode header, byte[] payload, byte[] signingInput, byte[] signature) {
     this.header = Objects.requireNonNull(header, "header").deepCopy();
     this.payload = Objects.requireNonNull(payload, "payload").clone();
     this.signingInput = Objects.requireNonNull(signingInput, "signingInput").clone();

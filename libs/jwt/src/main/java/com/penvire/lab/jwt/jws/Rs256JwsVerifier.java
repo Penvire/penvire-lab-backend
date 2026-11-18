@@ -4,9 +4,7 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.interfaces.RSAPublicKey;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class Rs256JwsVerifier implements JwsVerifier {
 
   @Override

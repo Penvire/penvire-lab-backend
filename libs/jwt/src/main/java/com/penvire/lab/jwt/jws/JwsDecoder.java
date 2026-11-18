@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.penvire.lab.jwt.ParsedJws;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -22,7 +23,7 @@ public class JwsDecoder {
     }
 
     String[] parts = jwt.split("\\.", -1);
-    if(parts.length != 3 || parts[0].isEmpty() || parts[1].isEmpty() || parts[2].isEmpty()) {
+    if (parts.length != 3 || parts[0].isEmpty() || parts[1].isEmpty() || parts[2].isEmpty()) {
       throw new JwsVerificationException("Malformed JWT compact token.");
     }
 
@@ -37,11 +38,11 @@ public class JwsDecoder {
       byte[] payload = decoder.decode(parts[1]);
       byte[] signature = decoder.decode(parts[2]);
 
-      byte[] signingInput =
-          (parts[0] + "." + parts[1]).getBytes(StandardCharsets.US_ASCII);
+      byte[] signingInput = (parts[0] + "." + parts[1]).getBytes(StandardCharsets.US_ASCII);
 
       return new ParsedJws(header, payload, signingInput, signature);
     } catch (IllegalArgumentException | IOException e) {
-      throw new JwsVerificationException("Cannot decode compact JWS", e);    }
+      throw new JwsVerificationException("Cannot decode compact JWS", e);
+    }
   }
 }
