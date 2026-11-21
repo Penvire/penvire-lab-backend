@@ -10,7 +10,7 @@ All API contracts live in [penvire-lab-contracts](https://github.com/Penvire/pen
 ## Decision
 
 - One release component per service document (`openapi/<service>/openapi.yaml`). release-please writes `info.version` in the release PR. Nobody bumps versions by hand.
-- A breaking change is marked with `!` in the pull request title. CI compares each document with its last release tag (`openapi-changes`) and fails when it finds a breaking change and the title has no `!`.
+- A breaking change is marked with `!` in the pull request title. CI compares each document with the pull request's base (`openapi-changes` plus checks for the Penvire extensions) and fails when it finds a breaking change and the title has no `!`.
 - Every operation declares `x-penvire-audience`: `api` (reachable from outside), `service` (internal service-to-service) or `protocol` (OpenID and similar protocol endpoints). Every `api` operation declares `x-penvire-scopes` from a shared scope catalogue.
 - Every `service` operation declares `x-penvire-callers`, the workloads allowed to call it, from a shared workload catalogue. Services enforce that list. `api` operations declare no callers: they are reached only through the BFF and the public API gateway ([ADR 0002](0002-client-access-through-bff-and-public-api.md)), and a service that needs the same capability gets a `service` operation instead. The receiving service is never declared, because it is the owner of the document.
 - `api` and `service` paths carry a path major (`/v1/…`, `/internal/v1/…`), versioned as described below.
@@ -65,3 +65,4 @@ Its version belongs to the package (the bundled YAML and `@penvire-lab/api-clien
 - **A public registry (Maven Central, npmjs) or GitHub Packages.** Rejected: the lab keeps its packages on infrastructure the maintainer controls, readable without authentication.
 - **Path major equal to contract major.** Rejected: removing a sunset path major breaks package consumers and needs a contract major bump, even though the remaining paths are unchanged. Keeping the numbers equal would force a pointless new path major.
 - **A release-please component for `public-api`.** Rejected: its changes come from other directories, so its commits cannot describe them. The diff can.
+- **Breaking-change check against the last release tag.** Rejected: once a breaking change is merged but not yet released, every later pull request would see it and fail without `!`. Comparing with the pull request's base checks exactly that pull request's changes, and works before the first release.
