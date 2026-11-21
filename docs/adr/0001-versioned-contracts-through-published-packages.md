@@ -12,6 +12,7 @@ All API contracts live in [penvire-lab-contracts](https://github.com/Penvire/pen
 - One release component per service document (`openapi/<service>/openapi.yaml`). release-please writes `info.version` in the release PR. Nobody bumps versions by hand.
 - A breaking change is marked with `!` in the pull request title. CI compares each document with its last release tag (`openapi-changes`) and fails when it finds a breaking change and the title has no `!`.
 - Every operation declares `x-penvire-audience`: `api` (reachable from outside), `service` (internal service-to-service) or `protocol` (OpenID and similar protocol endpoints). Every `api` operation declares `x-penvire-scopes` from a shared scope catalogue.
+- Every `service` operation declares `x-penvire-callers`, the workloads allowed to call it, from a shared workload catalogue. Services enforce that list. `api` operations declare no callers: they are reached only through the BFF and the public API gateway ([ADR 0002](0002-client-access-through-bff-and-public-api.md)), and a service that needs the same capability gets a `service` operation instead. The receiving service is never declared, because it is the owner of the document.
 - `api` and `service` paths carry the contract's major version (`/v1/…`, `/internal/v1/…`). A breaking change to a published `api` operation adds a new path major. The previous one stays available for a deprecation window and announces its end with `Deprecation` and `Sunset` headers.
 
 Published artifacts:
