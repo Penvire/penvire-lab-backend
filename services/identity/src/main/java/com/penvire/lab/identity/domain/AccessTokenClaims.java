@@ -11,18 +11,24 @@ public record AccessTokenClaims(
     Instant issuedAt,
     Instant notBefore,
     Instant expiresAt) {
+  private static final int MAX_IDENTIFIER_LENGTH = 4_096;
+
   public AccessTokenClaims {
-    if (issuer.isBlank()
-        || subject.isBlank()
-        || clientId.isBlank()
-        || audience.isBlank()
-        || tokenId.isBlank()) {
-      throw new IllegalArgumentException("Access-token identifiers must not be blank");
-    }
+    requireIdentifier("iss", issuer);
+    requireIdentifier("sub", subject);
+    requireIdentifier("client_id", clientId);
+    requireIdentifier("aud", audience);
+    requireIdentifier("jti", tokenId);
 
     if (!expiresAt.isAfter(issuedAt) || !expiresAt.isAfter(notBefore)) {
       throw new IllegalArgumentException(
           "Access-token expiration must be after issued-at and not-before");
+    }
+  }
+
+  private static void requireIdentifier(String name, String value) {
+    if (value.isBlank() || value.length() > MAX_IDENTIFIER_LENGTH) {
+      throw new IllegalArgumentException("Invalid access-token claim: " + name);
     }
   }
 }

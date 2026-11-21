@@ -50,10 +50,18 @@ public class MLDsa65JwsSigner implements AccessTokenSigner {
             .put("exp", claims.expiresAt().getEpochSecond());
 
     try {
+      var headerBytes = JSON.writeValueAsBytes(header);
+      var payloadBytes = JSON.writeValueAsBytes(payload);
+
+      if (headerBytes.length > 2 * 1024) {
+        throw new IllegalArgumentException("JWS header exceeds 2 KiB");
+      }
+      if (payloadBytes.length > 16 * 1024) {
+        throw new IllegalArgumentException("JWS payload exceeds 16 KiB");
+      }
+
       var input =
-          BASE64URL.encodeToString(JSON.writeValueAsBytes(header))
-              + "."
-              + BASE64URL.encodeToString(JSON.writeValueAsBytes(payload));
+          BASE64URL.encodeToString(headerBytes) + "." + BASE64URL.encodeToString(payloadBytes);
       return input + "." + BASE64URL.encodeToString(signInput(input));
     } catch (JsonProcessingException | GeneralSecurityException exception) {
       throw new IllegalStateException("Failed to sign access token", exception);
