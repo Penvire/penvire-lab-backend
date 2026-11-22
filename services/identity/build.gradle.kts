@@ -9,8 +9,10 @@ val identityContractFiles = configurations.resolvable("identityContractFiles") {
 }
 
 dependencies {
+    implementation(project(":libs:clock"))
     implementation(project(":libs:jwt"))
     implementation("io.quarkus:quarkus-rest-jackson")
+    testImplementation(testFixtures(project(":libs:clock")))
     testImplementation(libs.openapi.request.validator) {
         // Identity only validates OpenAPI 3.1; Swagger 2 conversion pulls in json-patch.
         exclude(group = "io.swagger.parser.v3", module = "swagger-parser-v2-converter")

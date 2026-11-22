@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.penvire.lab.clock.MutableClock;
 import com.penvire.lab.jwt.jws.JwsVerificationException;
 import com.penvire.lab.jwt.jws.JwsVerifier;
 import com.penvire.lab.jwt.jws.Rs256JwsVerifier;
@@ -449,6 +450,22 @@ class JwtValidatorTest {
             .validate(JwtTestTokens.accessToken(claims), JwtTestTokens.accessPolicy())
             .claims()
             .toString());
+  }
+
+  /** One validator lives as long as the service, so it must not capture the time once. */
+  @Test
+  void readsTheClockOnEveryValidation() throws Exception {
+    var clock = MutableClock.at(JwtTestTokens.NOW);
+    var validator = validator(clock);
+    String token = JwtTestTokens.accessToken(JwtTestTokens.accessClaims());
+
+    validator.validate(token, JwtTestTokens.accessPolicy());
+    // exp is NOW + 240 s and the policy allows 30 s of skew.
+    clock.advance(Duration.ofSeconds(270));
+
+    assertThrows(
+        JwtVerificationException.class,
+        () -> validator.validate(token, JwtTestTokens.accessPolicy()));
   }
 
   @Test

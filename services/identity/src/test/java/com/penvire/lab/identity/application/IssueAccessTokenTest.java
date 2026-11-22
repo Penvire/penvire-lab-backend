@@ -3,12 +3,15 @@ package com.penvire.lab.identity.application;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.penvire.lab.clock.MutableClock;
 import com.penvire.lab.identity.adapter.out.signing.MLDsa65JwsSigner;
 import com.penvire.lab.jwt.JwtType;
 import com.penvire.lab.jwt.JwtValidationPolicy;
 import com.penvire.lab.jwt.JwtValidator;
+import com.penvire.lab.jwt.JwtVerificationException;
 import com.penvire.lab.jwt.jws.MLDSA65JwsVerifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -74,6 +77,20 @@ class IssueAccessTokenTest {
   }
 
   @Test
+  void theIssuedTokenIsRejectedOnceItsLifetimeAndTheSkewHavePassed() throws Exception {
+    var lifetime = Duration.ofMinutes(5);
+    var clock = MutableClock.at(NOW);
+    var fixture = fixture(lifetime, clock);
+    var token = fixture.issue();
+
+    clock.advance(lifetime.plus(POLICY.clockSkew()).minusSeconds(1));
+    fixture.validator().validate(token, POLICY);
+
+    clock.advance(Duration.ofSeconds(1));
+    assertThrows(JwtVerificationException.class, () -> fixture.validator().validate(token, POLICY));
+  }
+
+  @Test
   @EnabledIfEnvironmentVariable(named = "RUN_OPENSSL_INTEROP", matches = "1")
   void openSslVerifiesTheSignatureOnTheIssuedToken(@TempDir Path directory) throws Exception {
     var fixture = fixture(Duration.ofMinutes(5));
@@ -107,13 +124,18 @@ class IssueAccessTokenTest {
   }
 
   private static Fixture fixture(Duration lifetime) throws Exception {
+    return fixture(lifetime, CLOCK);
+  }
+
+  /** The use case and the validator share one clock, so moving it ages the issued token. */
+  private static Fixture fixture(Duration lifetime, Clock clock) throws Exception {
     var keys = KeyPairGenerator.getInstance(ALGORITHM).generateKeyPair();
     var signer = new MLDsa65JwsSigner(KEY_ID, keys.getPrivate());
-    var useCase = new TokenService(new TestJwtConfig(lifetime), ISSUER, CLOCK, signer);
+    var useCase = new TokenService(new TestJwtConfig(lifetime), ISSUER, clock, signer);
     var validator =
         new JwtValidator(
             Map.of(ALGORITHM, new MLDSA65JwsVerifier()),
-            CLOCK,
+            clock,
             (issuer, keyId, algorithm, type) -> {
               assertEquals(ISSUER, issuer);
               assertEquals(KEY_ID, keyId);
