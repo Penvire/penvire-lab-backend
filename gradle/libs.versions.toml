@@ -28,6 +28,9 @@ jackson = "2.23.0"
 # HTTP response contract tests.
 openapi-request-validator = "3.0.0"
 
+# Time-ordered UUIDv7 identifiers.
+jug = "5.2.0"
+
 [libraries]
 # Quarkus BOM and its Gradle integration.
 quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
@@ -54,3 +57,6 @@ openapi-request-validator = { module = "com.atlassian.oai:openapi-request-valida
 
 # JSON tree model and parser.
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+
+# UUIDv7 Generator
+jug = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "jug" }
