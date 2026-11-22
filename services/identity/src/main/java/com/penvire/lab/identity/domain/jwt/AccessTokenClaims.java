@@ -1,4 +1,4 @@
-package com.penvire.lab.identity.domain;
+package com.penvire.lab.identity.domain.jwt;
 
 import java.time.Instant;
 

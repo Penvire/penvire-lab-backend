@@ -4,10 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.penvire.lab.identity.adapter.out.signing.MLDsa65JwsSigner;
-import com.penvire.lab.identity.domain.AccessTokenClaims;
+import com.penvire.lab.identity.domain.jwt.AccessTokenClaims;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ class AccessTokenRejectionTest {
   private static final String KEY_ID = "test-key-1";
   private static final Instant NOW = Instant.parse("2030-01-01T00:00:00Z");
   private static final Clock CLOCK = Clock.fixed(NOW, ZoneOffset.UTC);
+  private static final TestJwtConfig JWT_CONFIG = new TestJwtConfig(Duration.ofMinutes(5));
   private static final int MAX_CLAIM_CHARS = 4_096;
 
   @ParameterizedTest
@@ -36,7 +38,7 @@ class AccessTokenRejectionTest {
       String subject, String client, String audience) {
     assertThrows(
         IllegalArgumentException.class,
-        () -> issuerWithUnreachableSigner().issue(subject, client, audience));
+        () -> issuerWithUnreachableSigner().issueAccessToken(subject, client, audience));
   }
 
   @Test
@@ -45,16 +47,18 @@ class AccessTokenRejectionTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> issuerWithUnreachableSigner().issue(subject, CLIENT, AUDIENCE));
+        () -> issuerWithUnreachableSigner().issueAccessToken(subject, CLIENT, AUDIENCE));
   }
 
   @Test
   void rejectsACombinedPayloadThatExceedsTheVerifierByteLimit() throws Exception {
     // Each claim fits the character limit, but together they exceed 16 KiB of UTF-8.
     var claim = "é".repeat(MAX_CLAIM_CHARS);
-    var issuer = new IssueAccessToken(ISSUER, CLOCK, new MLDsa65JwsSigner(KEY_ID, signingKey()));
+    var issuer =
+        new TokenService(JWT_CONFIG, ISSUER, CLOCK, new MLDsa65JwsSigner(KEY_ID, signingKey()));
 
-    assertThrows(IllegalArgumentException.class, () -> issuer.issue(claim, claim, claim));
+    assertThrows(
+        IllegalArgumentException.class, () -> issuer.issueAccessToken(claim, claim, claim));
   }
 
   @Test
@@ -67,7 +71,8 @@ class AccessTokenRejectionTest {
         IllegalArgumentException.class,
         () -> {
           var signer = new MLDsa65JwsSigner(oversizedKeyId, key);
-          new IssueAccessToken(ISSUER, CLOCK, signer).issue(SUBJECT, CLIENT, AUDIENCE);
+          new TokenService(JWT_CONFIG, ISSUER, CLOCK, signer)
+              .issueAccessToken(SUBJECT, CLIENT, AUDIENCE);
         });
   }
 
@@ -98,8 +103,9 @@ class AccessTokenRejectionTest {
         IllegalArgumentException.class, () -> claimsWithTimes(NOW.minusSeconds(1), NOW, NOW));
   }
 
-  private static IssueAccessToken issuerWithUnreachableSigner() {
-    return new IssueAccessToken(ISSUER, CLOCK, claims -> fail("Invalid claims reached the signer"));
+  private static TokenService issuerWithUnreachableSigner() {
+    return new TokenService(
+        JWT_CONFIG, ISSUER, CLOCK, claims -> fail("Invalid claims reached the signer"));
   }
 
   private static AccessTokenClaims claimsWithTimes(
