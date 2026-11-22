@@ -7,7 +7,7 @@ lombok = "1.18.48"
 mapstruct = "1.6.3"
 lombok-mapstruct-binding = "0.2.0"
 # Pinned by the Quarkus BOM.
-jspecify = "1.0.0"
+jspecify = "1.0.1"
 
 # Static analysis, formatting and coverage.
 errorprone = "2.53.0"
