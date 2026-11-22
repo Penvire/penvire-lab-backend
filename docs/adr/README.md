@@ -39,5 +39,6 @@ Add `## Considered options` only when the rejected alternatives are worth rememb
 | --- | --- | --- |
 | [0001](0001-versioned-contracts-through-published-packages.md) | Versioned contracts through published packages | accepted |
 | [0002](0002-client-access-through-bff-and-public-api.md) | Client access through the BFF and the public API | accepted |
+| [0003](0003-events-through-a-transactional-outbox.md) | Events through a transactional outbox, as CloudEvents with Avro payloads | proposed |
 
 Add every new ADR to this index in the same pull request.
