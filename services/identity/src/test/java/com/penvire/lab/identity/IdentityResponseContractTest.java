@@ -17,7 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 @QuarkusTest
 class IdentityResponseContractTest {
   @ParameterizedTest
-  @ValueSource(strings = {"/.well-known/openid-configuration", "/jwks"})
+  @ValueSource(strings = {"/.well-known/openid-configuration", "/.well-known/jwks.json"})
   void servesAResponseThatMatchesThePublishedContract(String path) throws IOException {
     var contract = loadContract();
     var response = given().redirects().follow(false).when().get(path);
