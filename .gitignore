@@ -5,6 +5,9 @@
 .idea/
 .pre-commit-config.yaml
 
+# aislop scan sessions
+.aislop/
+
 # Environment files
 .env
 

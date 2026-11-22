@@ -21,6 +21,7 @@ rootProject.name = "penvire-lab-backend"
 
 // Libs
 include(":libs:observability")
+include(":libs:persistence")
 include(":libs:problem")
 include(":libs:jwt")
 
