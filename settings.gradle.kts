@@ -20,6 +20,7 @@ dependencyResolutionManagement {
 rootProject.name = "penvire-lab-backend"
 
 // Libs
+include(":libs:clock")
 include(":libs:observability")
 include(":libs:persistence")
 include(":libs:problem")
