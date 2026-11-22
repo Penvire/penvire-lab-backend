@@ -3,7 +3,7 @@ package com.penvire.lab.identity.adapter.out.signing;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.penvire.lab.identity.application.port.out.AccessTokenSigner;
-import com.penvire.lab.identity.domain.AccessTokenClaims;
+import com.penvire.lab.identity.domain.jwt.AccessTokenClaims;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;

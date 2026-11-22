@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class IssueAccessTokenTest {
 
@@ -45,9 +47,11 @@ class IssueAccessTokenTest {
           Set.of(ALGORITHM),
           Duration.ofSeconds(30));
 
-  @Test
-  void issuesAnAccessTokenForTheIntendedSubjectAndAudience() throws Exception {
-    var fixture = fixture();
+  @ParameterizedTest
+  @CsvSource({"PT5M,300", "PT12M,720"})
+  void issuesAnAccessTokenWithTheConfiguredLifetime(String lifetime, long expectedSeconds)
+      throws Exception {
+    var fixture = fixture(Duration.parse(lifetime));
     var claims = fixture.validator().validate(fixture.issue(), POLICY).claims();
 
     assertEquals(ISSUER, claims.path("iss").textValue());
@@ -57,12 +61,12 @@ class IssueAccessTokenTest {
     assertFalse(claims.path("jti").asText().isBlank());
     assertEquals(NOW.getEpochSecond(), claims.path("iat").longValue());
     assertEquals(NOW.getEpochSecond(), claims.path("nbf").longValue());
-    assertEquals(NOW.plusSeconds(300).getEpochSecond(), claims.path("exp").longValue());
+    assertEquals(NOW.plusSeconds(expectedSeconds).getEpochSecond(), claims.path("exp").longValue());
   }
 
   @Test
   void issuesDistinctTokenIdsEvenWhenTimeAndInputsMatch() throws Exception {
-    var fixture = fixture();
+    var fixture = fixture(Duration.ofMinutes(5));
     var first = fixture.validator().validate(fixture.issue(), POLICY).claims();
     var second = fixture.validator().validate(fixture.issue(), POLICY).claims();
 
@@ -72,7 +76,7 @@ class IssueAccessTokenTest {
   @Test
   @EnabledIfEnvironmentVariable(named = "RUN_OPENSSL_INTEROP", matches = "1")
   void openSslVerifiesTheSignatureOnTheIssuedToken(@TempDir Path directory) throws Exception {
-    var fixture = fixture();
+    var fixture = fixture(Duration.ofMinutes(5));
     var parts = fixture.issue().split("[.]", -1);
     assertEquals(3, parts.length);
 
@@ -102,10 +106,10 @@ class IssueAccessTokenTest {
         signature.toString());
   }
 
-  private static Fixture fixture() throws Exception {
+  private static Fixture fixture(Duration lifetime) throws Exception {
     var keys = KeyPairGenerator.getInstance(ALGORITHM).generateKeyPair();
     var signer = new MLDsa65JwsSigner(KEY_ID, keys.getPrivate());
-    var useCase = new IssueAccessToken(ISSUER, CLOCK, signer);
+    var useCase = new TokenService(new TestJwtConfig(lifetime), ISSUER, CLOCK, signer);
     var validator =
         new JwtValidator(
             Map.of(ALGORITHM, new MLDSA65JwsVerifier()),
@@ -134,9 +138,9 @@ class IssueAccessTokenTest {
     return output;
   }
 
-  private record Fixture(IssueAccessToken useCase, JwtValidator validator, PublicKey publicKey) {
+  private record Fixture(TokenService useCase, JwtValidator validator, PublicKey publicKey) {
     String issue() {
-      return useCase.issue(SUBJECT, CLIENT_ID, AUDIENCE);
+      return useCase.issueAccessToken(SUBJECT, CLIENT_ID, AUDIENCE);
     }
   }
 }

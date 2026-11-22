@@ -6,6 +6,14 @@ dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
     repositories {
         mavenCentral()
+        exclusiveContent {
+            forRepository {
+                maven("https://git.qf0xb.de/api/packages/penvire/maven")
+            }
+            filter {
+                includeGroup("dev.penvire.lab")
+            }
+        }
     }
 }
 

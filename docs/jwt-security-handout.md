@@ -89,7 +89,7 @@ The exact Quarkus **3.40.1** source was checked:
 - Access-token lifetime: **5 minutes**.
 - ID-token lifetime: **5 minutes**.
 - Remembered refresh-session idle timeout: **30 days**.
-- Remembered refresh-session absolute lifetime: **90 days**.
+- Remembered refresh-session absolute lifetime: **6 calendar months from login**.
 - Successful refresh resets idle expiry but cannot extend absolute expiry. Replacement refresh tokens cannot outlive either limit.
 - Each native or BFF login has an independent refresh-token family.
 - Refresh consumes the old token and issues its replacement atomically.

@@ -16,6 +16,16 @@ The lab implements the security-critical parts of the Penvire platform by hand, 
 
 Java 25, Quarkus and Gradle, with devenv as the development environment.
 
+## Identity server contract
+
+Identity builds against the released OpenAPI YAML from the Forgejo Maven registry. The
+`penvire.openapi-server` convention plugin generates Quarkus REST interfaces and models
+under `services/identity/build/generated/openapi/server`. Gradle compiles these sources
+as part of the normal build. REST adapters implement the generated interfaces.
+
+To generate the sources on their own, run `./gradlew :services:identity:generateOpenApiServer`.
+The contract version is pinned by `identity-contract` in `gradle/libs.versions.toml`.
+
 ## Related
 
 - [penvire-lab-contracts](https://github.com/Penvire/penvire-lab-contracts): API and event contracts
