@@ -23,3 +23,13 @@ _Avoid_: API key, personal access token
 **Scope**:
 A named permission an operation requires and a client must hold, for example `engagement:read`.
 _Avoid_: permission, right
+
+## Events
+
+**Domain event**:
+A fact about a change a service made to its own data, published so other services can react to it.
+_Avoid_: notification, message
+
+**Audit event**:
+A record of who attempted a security-relevant action, on what, and whether it succeeded, was denied or failed.
+_Avoid_: audit log entry, log event

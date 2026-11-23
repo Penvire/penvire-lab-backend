@@ -42,5 +42,6 @@ Add `## Considered options` only when the rejected alternatives are worth rememb
 | [0003](0003-events-through-a-transactional-outbox.md) | Events through a transactional outbox, as CloudEvents with Avro payloads | superseded by ADR-0004 |
 | [0004](0004-events-written-with-the-latest-revision-of-their-package.md) | Events through a transactional outbox, written with the latest schema revision of their package | accepted |
 | [0005](0005-event-library-relay-consumer-and-migrations.md) | Event library: one relay per service, SmallRye consumers, and migrations shipped by the library | accepted |
+| [0006](0006-audit-events-recorded-by-each-service.md) | Audit events recorded by each service through its outbox, beside its domain events | accepted |
 
 Add every new ADR to this index in the same pull request.
