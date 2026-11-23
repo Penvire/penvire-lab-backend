@@ -2,14 +2,20 @@
  * Recording audit events through the service's outbox (ADR 0006, ADR 0008).
  *
  * <p>A use case declares its action with {@link com.penvire.lab.audit.Audited} and reports its
- * target to {@link com.penvire.lab.audit.AuditScope}:
+ * target, and optionally its state before and after, to {@link com.penvire.lab.audit.AuditScope}:
  *
  * <pre>{@code
- * @Audited(value = "identity.client.update", deniedOn = AuthorizationException.class)
+ * @Audited(
+ *     value = "identity.client.update",
+ *     deniedOn = AuthorizationException.class,
+ *     state = ClientState.class,
+ *     pathOnly = "redirectUris")
  * @Transactional
  * public void update(ClientId id, ...) {
  *   audit.target(id.toString());
+ *   ClientState before = ...;
  *   ...
+ *   audit.state(before, after);
  * }
  * }</pre>
  *
@@ -30,8 +36,15 @@
  * {@code <service>.audit}; {@code penvire.audit.service} names the service and defaults to {@code
  * quarkus.application.name}. The record key is the target ID, else the actor ID, else the event ID.
  *
- * <p>Not recorded yet: {@code changes}, which stays empty, the {@code tenantid} attribute, and the
- * client a user acted through.
+ * <p>A {@code SUCCESS} records the {@code changes} between the reported states: one entry per
+ * changed field, sorted by its dotted path, with the old and new value as JSON text written by the
+ * service's {@code ObjectMapper}. A missing side, a create or a delete, gives JSON {@code null}.
+ * Records are walked into; any other value, a collection too, is compared and written whole. {@link
+ * com.penvire.lab.audit.AuditIgnored}, {@code ignore} and {@code ignoreTypes} leave fields out, and
+ * {@code pathOnly} records a field's path without its values. A {@code DENIED} or {@code FAILED}
+ * action changed nothing and records no changes.
+ *
+ * <p>Not recorded yet: the {@code tenantid} attribute and the client a user acted through.
  */
 @NullMarked
 package com.penvire.lab.audit;

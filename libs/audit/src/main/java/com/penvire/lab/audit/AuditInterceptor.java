@@ -7,6 +7,8 @@ import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InvocationContext;
+import java.util.List;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -32,7 +34,7 @@ class AuditInterceptor {
   @AroundInvoke
   Object record(InvocationContext context) throws Exception {
     Audited audited = declared(context);
-    AuditScope.Frame frame = scope.enter(audited.value());
+    AuditScope.Frame frame = scope.enter(audited);
 
     try {
       return context.proceed();
@@ -63,7 +65,37 @@ class AuditInterceptor {
       }
     }
 
+    requireKnownPaths(context, audited);
     return audited;
+  }
+
+  /** Rejects {@code pathOnly} and {@code ignore} paths the declared state does not have. */
+  private static void requireKnownPaths(InvocationContext context, Audited audited) {
+    Class<?> state = audited.state();
+    boolean hasRules = audited.pathOnly().length > 0 || audited.ignore().length > 0;
+
+    if (state == void.class) {
+      if (hasRules) {
+        throw new IllegalStateException(
+            context.getMethod() + " lists audit paths but declares no state");
+      }
+      return;
+    }
+
+    if (!state.isRecord()) {
+      throw new IllegalStateException(
+          context.getMethod() + " declares " + state.getName() + " as state, which is no record");
+    }
+
+    Set<String> paths = StateChanges.paths(state);
+    for (String[] rules : List.of(audited.pathOnly(), audited.ignore())) {
+      for (String path : rules) {
+        if (!paths.contains(path)) {
+          throw new IllegalStateException(
+              context.getMethod() + " lists " + path + ", which " + state.getName() + " has not");
+        }
+      }
+    }
   }
 
   /**

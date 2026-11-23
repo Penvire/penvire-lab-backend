@@ -12,6 +12,8 @@ dependencies {
     implementation("io.quarkus:quarkus-security")
     // Tells an unauthenticated HTTP caller (ANONYMOUS) from work outside a request (SYSTEM).
     implementation("io.quarkus:quarkus-vertx-http")
+    // Changed values are recorded as JSON text, with the service's own ObjectMapper settings.
+    implementation("io.quarkus:quarkus-jackson")
 
     testImplementation("io.quarkus:quarkus-test-security")
     testImplementation("io.quarkus:quarkus-rest")
