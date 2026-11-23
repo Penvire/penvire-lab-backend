@@ -49,7 +49,7 @@ Convention plugins in `build-logic/`:
 
 - `penvire.java-library`: every module. Error Prone and NullAway (JSpecify, `com.penvire`), Spotless, JaCoCo, Lombok.
 - `penvire.quarkus-library`: shared libraries in `libs/`. Quarkus BOM; `quarkusDev` disabled.
-- `penvire.quarkus-service`: services. REST, health, OpenTelemetry, MapStruct; shared config defaults in a generated `META-INF/microprofile-config.properties`.
+- `penvire.quarkus-service`: services. REST, health, OpenTelemetry, MapStruct; shared config defaults in a generated `META-INF/microprofile-config.properties`; `audit-manifest.yaml`, written by `./gradlew build` from the `@Audited` methods and committed (CI fails if it is out of date, and comments on each pull request with what it changes).
 
 New services: add `include(":services:<name>")` to `settings.gradle.kts` and a `build.gradle.kts` that applies `penvire.quarkus-service`, give it its own HTTP and management ports in `application.properties`, register `services/<name>` in `release-please-config.json` and `.release-please-manifest.json`, and add `services/<name>/version.txt` containing `0.0.0` (release-please only updates that file if it exists).
 
