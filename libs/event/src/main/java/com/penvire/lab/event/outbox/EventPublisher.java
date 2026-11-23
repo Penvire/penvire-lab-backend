@@ -76,7 +76,7 @@ public class EventPublisher {
     row.topic = topic;
     row.type = eventType.type();
     row.time = clock.instant();
-    row.dataschema = schemas.latestOf(payload).dataSchema();
+    row.dataschema = schemas.latestOf(payload).dataSchema().urn();
     row.traceparent = currentTraceparent();
     row.tenantid = tenantId;
     row.payload = encode(payload);

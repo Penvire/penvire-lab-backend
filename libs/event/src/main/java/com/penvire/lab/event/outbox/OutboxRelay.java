@@ -23,7 +23,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
  */
 @Singleton // Not @ApplicationScoped: the constructor creates the producer and must run EXACTLY
 // once.
-public class OutboxRelay {
+class OutboxRelay {
 
   private static final int BATCH_SIZE = 100;
   private static final Duration RETENTION = Duration.ofDays(7);
@@ -42,6 +42,11 @@ public class OutboxRelay {
     Map<String, Object> config = new HashMap<>(kafkaConfig);
     config.put(ProducerConfig.ACKS_CONFIG, "all");
     config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+    // A send gives up within 40 s (metadata wait plus delivery), before the relay's transaction
+    // times out at 60 s, so an unreachable broker ends the run instead of rolling it back.
+    config.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, 10_000);
+    config.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 10_000);
+    config.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, 30_000);
     this.producer = new KafkaProducer<>(config, new StringSerializer(), new ByteArraySerializer());
   }
 

@@ -33,7 +33,7 @@ class OutboxMigrationTest {
 
   @Test
   void startupAppliesServiceAndLibraryMigrations() {
-    assertEquals(List.of("0.1", "1"), appliedVersions(flyway));
+    assertEquals(List.of("0.1", "0.2", "1"), appliedVersions(flyway));
   }
 
   @Test
@@ -65,7 +65,7 @@ class OutboxMigrationTest {
             .findFirst()
             .orElseThrow();
     assertEquals(MigrationState.OUT_OF_ORDER, libraryMigration.getState());
-    assertEquals(List.of("0.1", "1"), appliedVersions(serviceAfterUpgrade));
+    assertEquals(List.of("0.1", "0.2", "1"), appliedVersions(serviceAfterUpgrade));
   }
 
   /** Applied versioned migrations, without Flyway's version-less schema-creation marker. */

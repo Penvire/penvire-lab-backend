@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
     id("penvire.quarkus-library")
     id("io.quarkus") version libs.versions.quarkus.get()
@@ -17,4 +19,11 @@ dependencies {
 
     testImplementation(testFixtures(project(":libs:clock")))
     testImplementation("org.awaitility:awaitility")
+    // Generates real Avro classes from src/test/avro, like a contract package ships them.
+    testImplementation("io.quarkus:quarkus-avro")
+}
+
+// Avro marks its classes @AvroGenerated, not @Generated, so Error Prone would check them.
+tasks.named<JavaCompile>("compileTestJava") {
+    options.errorprone.excludedPaths = ".*/quarkus-test-generated-sources/.*"
 }

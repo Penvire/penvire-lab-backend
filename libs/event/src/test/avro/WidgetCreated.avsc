@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "WidgetCreated",
+  "namespace": "dev.penvire.lab.widget.events.v1",
+  "fields": [
+    { "name": "widgetId", "type": "string" },
+    { "name": "colour", "type": ["null", "string"], "default": null }
+  ]
+}

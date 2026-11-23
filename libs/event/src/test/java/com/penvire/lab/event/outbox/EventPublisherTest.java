@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.penvire.lab.event.TestClockProducer;
-import com.penvire.lab.event.TestEvents.WidgetCreated;
+import dev.penvire.lab.widget.events.v1.WidgetCreated;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
@@ -121,7 +121,7 @@ class EventPublisherTest {
   }
 
   private static GenericRecord decode(byte[] payload) throws IOException {
-    return new GenericDatumReader<GenericRecord>(WidgetCreated.SCHEMA)
+    return new GenericDatumReader<GenericRecord>(WidgetCreated.getClassSchema())
         .read(null, DecoderFactory.get().binaryDecoder(payload, null));
   }
 }

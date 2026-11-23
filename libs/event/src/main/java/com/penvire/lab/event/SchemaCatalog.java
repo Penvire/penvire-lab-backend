@@ -19,6 +19,7 @@ import org.jspecify.annotations.Nullable;
 public class SchemaCatalog {
 
   private final Map<Class<?>, SchemaRevision> latestByClass = new ConcurrentHashMap<>();
+  private final Map<DataSchema, SchemaRevision> writers = new ConcurrentHashMap<>();
 
   /**
    * The revision a producer writes: the latest one in the package that holds the record's class.
@@ -29,6 +30,29 @@ public class SchemaCatalog {
   public SchemaRevision latestOf(SpecificRecordBase record) {
     return latestByClass.computeIfAbsent(
         record.getClass(), type -> findLatest(type, record.getSchema()));
+  }
+
+  /**
+   * The schema an incoming event was written with, from the contract package that holds the
+   * consumer's class for it.
+   *
+   * @throws IllegalStateException if that package does not ship the revision: the consumer runs an
+   *     older package than its producer and must upgrade first (ADR 0004)
+   */
+  public SchemaRevision writerOf(
+      DataSchema dataSchema, Class<? extends SpecificRecordBase> readerClass) {
+    return writers.computeIfAbsent(
+        dataSchema,
+        key -> {
+          String resource = "avro/" + key.fullName() + "/" + key.revision() + ".avsc";
+          Schema schema = read(readerClass.getClassLoader(), resource);
+          if (schema == null) {
+            throw new IllegalStateException(
+                key.urn() + " is not on the classpath; upgrade the contract package");
+          }
+
+          return new SchemaRevision(schema, key.revision());
+        });
   }
 
   private static SchemaRevision findLatest(Class<?> type, Schema generated) {
