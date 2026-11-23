@@ -62,6 +62,16 @@ class EventPublisherTest {
   }
 
   @Test
+  void keysAnEventWithoutSubjectByItsOwnId() {
+    UUID id =
+        QuarkusTransaction.requiringNew()
+            .call(() ->
+                publisher.publishKeyedById("widget.widget", null, new WidgetCreated("w-8", null)));
+
+    assertEquals(id.toString(), find(id).subject);
+  }
+
+  @Test
   void keepsTheTraceparentOfTheActiveSpan() {
     SpanContext span =
         SpanContext.create(
