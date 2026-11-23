@@ -25,6 +25,7 @@ include(":libs:observability")
 include(":libs:persistence")
 include(":libs:problem")
 include(":libs:jwt")
+include(":libs:event")
 
 // Services
 include(":services:identity")
