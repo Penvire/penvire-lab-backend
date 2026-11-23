@@ -1,8 +1,11 @@
 package com.penvire.lab.event;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.penvire.lab.widget.events.v1.WidgetCreated;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.junit.jupiter.api.Test;
@@ -15,8 +18,7 @@ class EventTypeTest {
   @Test
   void derivesServiceEventAndMajorFromTheFullName() {
     assertEquals(
-        new EventType("widget", "widget-created", 1),
-        EventType.of(TestEvents.WidgetCreated.SCHEMA));
+        new EventType("widget", "widget-created", 1), EventType.of(WidgetCreated.getClassSchema()));
   }
 
   @Test
@@ -56,5 +58,12 @@ class EventTypeTest {
     Schema schema = SchemaBuilder.record("WidgetCreated").namespace(namespace).fields().endRecord();
 
     assertThrows(IllegalArgumentException.class, () -> EventType.of(schema));
+  }
+
+  @Test
+  void recognisesEventNamespacesAndNothingElse() {
+    assertTrue(EventType.isEventNamespace("dev.penvire.lab.identity.events.v1"));
+    assertFalse(EventType.isEventNamespace("dev.penvire.lab.identity"));
+    assertFalse(EventType.isEventNamespace("java.lang"));
   }
 }

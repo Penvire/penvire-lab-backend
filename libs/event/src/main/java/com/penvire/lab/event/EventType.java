@@ -31,6 +31,14 @@ public record EventType(String service, String event, int major) {
         matcher.group(1), kebab(schema.getName()), Integer.parseInt(matcher.group(2)));
   }
 
+  /**
+   * Whether the namespace holds Penvire Lab events. Generated classes live in the Java package of
+   * their schema's namespace, so this also tells whether a class is a generated event class.
+   */
+  public static boolean isEventNamespace(String namespace) {
+    return NAMESPACE.matcher(namespace).matches();
+  }
+
   /** For example {@code dev.penvire.lab.identity.session-started.v1} */
   public String type() {
     return "dev.penvire.lab." + service + "." + event + ".v" + major;
