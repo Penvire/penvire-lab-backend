@@ -31,9 +31,32 @@ public class AuditScope {
     current().actor = actor;
   }
 
+  /**
+   * Reports the state before and after the change; a {@code SUCCESS} records the fields that
+   * differ. Pass null as before for a create and as after for a delete. A later call replaces an
+   * earlier one; without a call, the event has no changes.
+   *
+   * @throws IllegalStateException outside an {@link Audited} method, if the method declares no
+   *     {@link Audited#state}, or if a side is not of that type
+   */
+  public void state(@Nullable Object before, @Nullable Object after) {
+    Frame frame = current();
+    Class<?> type = frame.audited.state();
+
+    if (type == void.class) {
+      throw new IllegalStateException(frame.action + " declares no state in @Audited");
+    }
+
+    requireType(type, before);
+    requireType(type, after);
+    frame.before = before;
+    frame.after = after;
+    frame.stateReported = true;
+  }
+
   /** Opens the frame of an audited call on this thread; {@link AuditInterceptor} calls it. */
-  Frame enter(String action) {
-    Frame frame = new Frame(action);
+  Frame enter(Audited audited) {
+    Frame frame = new Frame(audited);
     frames.get().push(frame);
     return frame;
   }
@@ -61,8 +84,21 @@ public class AuditScope {
     }
   }
 
-  /** One audited call: its action and what the use case reported. */
+  private static void requireType(Class<?> type, @Nullable Object side) {
+    if (side != null && !type.isInstance(side)) {
+      throw new IllegalStateException(
+          side.getClass().getName()
+              + " reported as state, but @Audited declares "
+              + type.getName());
+    }
+  }
+
+  /** One audited call: its declaration and what the use case reported. */
   static final class Frame {
+    /** The method's {@link Audited}, for its state rules. */
+    final Audited audited;
+
+    /** {@link Audited#value}. */
     final String action;
 
     /**
@@ -74,8 +110,21 @@ public class AuditScope {
     @Nullable String targetId;
     @Nullable AuditActor actor;
 
-    private Frame(String action) {
-      this.action = action;
+    /**
+     * Whether the use case called {@link AuditScope#state}; tells a create and delete pair of nulls
+     * from no report at all.
+     */
+    boolean stateReported;
+
+    /** The reported state; null for a create, or if none was reported. */
+    @Nullable Object before;
+
+    /** The reported state; null for a delete, or if none was reported. */
+    @Nullable Object after;
+
+    private Frame(Audited audited) {
+      this.audited = audited;
+      this.action = audited.value();
     }
   }
 }

@@ -46,4 +46,36 @@ public @interface Audited {
    */
   @Nonbinding
   Class<? extends Exception>[] failedOn() default {};
+
+  /**
+   * The record type of the state the use case reports through {@link AuditScope#state}; its changed
+   * fields become the event's {@code changes}. Nested records are walked into, with dotted paths
+   * such as {@code owner.email}; any other field, a collection too, is one value. None by default:
+   * a use case that reports state without declaring it fails, and a type that is no record fails
+   * the call before the use case runs.
+   */
+  @Nonbinding
+  Class<?> state() default void.class;
+
+  /**
+   * Paths of {@link #state} recorded without their values, for example {@code owner.email}. A path
+   * naming a nested record covers every field under it. An unknown path fails the call before the
+   * use case runs.
+   */
+  @Nonbinding
+  String[] pathOnly() default {};
+
+  /**
+   * Paths of {@link #state} never recorded; wins over {@link #pathOnly}. A path naming a nested
+   * record covers every field under it. An unknown path fails the call before the use case runs.
+   */
+  @Nonbinding
+  String[] ignore() default {};
+
+  /**
+   * Types never recorded wherever they appear in {@link #state}, subtypes included, as if they were
+   * annotated {@link AuditIgnored}; for types the service does not own.
+   */
+  @Nonbinding
+  Class<?>[] ignoreTypes() default {};
 }

@@ -4,6 +4,7 @@ import com.penvire.lab.event.EventType;
 import com.penvire.lab.event.outbox.EventPublisher;
 import io.quarkus.runtime.Startup;
 import jakarta.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +28,10 @@ class AuditRecorder {
 
   private final EventPublisher publisher;
   private final CallerResolver callers;
+
+  private final StateChanges states;
+  private final Schema changeSchema;
+
   private final SpecificData data;
   private final Schema schema;
   private final String service;
@@ -35,14 +40,20 @@ class AuditRecorder {
   AuditRecorder(
       EventPublisher publisher,
       CallerResolver callers,
+      StateChanges states,
       @ConfigProperty(name = "penvire.audit.service") String service) {
     Class<? extends SpecificRecordBase> type = recordClass(service);
     this.callers = callers;
     this.publisher = publisher;
+
+    this.states = states;
+
     this.data = SpecificData.getForClass(type);
     this.schema = data.getSchema(type);
     this.service = EventType.of(schema).service();
     this.topic = this.service + ".audit";
+
+    this.changeSchema = schema.getField("changes").schema().getElementType();
   }
 
   /**
@@ -67,7 +78,8 @@ class AuditRecorder {
     event.put("targetType", targetType);
     event.put("targetId", targetId);
     event.put("reason", reason);
-    event.put("changes", List.of());
+
+    event.put("changes", outcome == Outcome.SUCCESS ? changes(frame) : List.of());
 
     String subject = targetId != null ? targetId : actor.id();
     if (subject != null) {
@@ -75,6 +87,25 @@ class AuditRecorder {
     } else {
       publisher.publishKeyedById(topic, null, event);
     }
+  }
+
+  /**
+   * The service's {@code AuditChange} records for the state the use case reported; none if it
+   * reported none. A refused or failed action changed nothing, so only {@code SUCCESS} has changes.
+   */
+  private List<Object> changes(AuditScope.Frame frame) {
+    if (!frame.stateReported) {
+      return List.of();
+    }
+    List<Object> changes = new ArrayList<>();
+    for (StateChanges.Change change : states.between(frame.audited, frame.before, frame.after)) {
+      SpecificRecordBase record = (SpecificRecordBase) data.newRecord(null, changeSchema);
+      record.put("fieldPath", change.path());
+      record.put("oldValue", change.oldValue());
+      record.put("newValue", change.newValue());
+      changes.add(record);
+    }
+    return changes;
   }
 
   /** The resource of {@code <service>.<resource>.<verb>}, after checking the service is ours. */
