@@ -61,8 +61,23 @@ public class EventPublisher {
     return append(topic, subject, tenantId, payload);
   }
 
+  /**
+   * Publishes an event with nothing to stay in order with; its own ID becomes the subject and
+   * record key (ADR 0006: an anonymous caller refused before a resource existed).
+   *
+   * @param tenantId the owning tenant, or null for a platform-scoped event
+   */
+  @Transactional(Transactional.TxType.MANDATORY)
+  public UUID publishKeyedById(
+      String topic, @Nullable String tenantId, SpecificRecordBase payload) {
+    return append(topic, null, tenantId, payload);
+  }
+
   private UUID append(
-      String topic, String subject, @Nullable String tenantId, SpecificRecordBase payload) {
+      String topic,
+      @Nullable String subject,
+      @Nullable String tenantId,
+      SpecificRecordBase payload) {
     EventType eventType = EventType.of(payload.getSchema());
     if (!topic.startsWith(eventType.service() + ".")) {
       throw new IllegalArgumentException(
@@ -72,7 +87,7 @@ public class EventPublisher {
     OutboxEventEntity row = new OutboxEventEntity();
     row.id = ids.next();
     row.source = eventType.source();
-    row.subject = subject;
+    row.subject = subject != null ? subject : row.id.toString();
     row.topic = topic;
     row.type = eventType.type();
     row.time = clock.instant();

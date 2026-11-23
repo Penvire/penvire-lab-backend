@@ -11,8 +11,9 @@ Each ADR carries a `Status` in its frontmatter:
 - `proposed`: only for an ADR merged on purpose before it is decided; rare.
 - `deprecated`: no longer applies and has no replacement.
 - `superseded by ADR-NNNN`: replaced by a later ADR.
+- `accepted, partly superseded by ADR-NNNN`: a later ADR replaces some of its points and names them; the rest still applies.
 
-Do not rewrite an accepted ADR. To change a decision, write a new ADR and set the old one to `superseded by ADR-NNNN`. Fixing typos and broken links is fine.
+Do not rewrite an accepted ADR. To change a decision, write a new ADR and set the old one to `superseded by ADR-NNNN`, or to `accepted, partly superseded by ADR-NNNN` when only some of its points change. Fixing typos and broken links is fine.
 
 ## Numbering
 
@@ -42,6 +43,8 @@ Add `## Considered options` only when the rejected alternatives are worth rememb
 | [0003](0003-events-through-a-transactional-outbox.md) | Events through a transactional outbox, as CloudEvents with Avro payloads | superseded by ADR-0004 |
 | [0004](0004-events-written-with-the-latest-revision-of-their-package.md) | Events through a transactional outbox, written with the latest schema revision of their package | accepted |
 | [0005](0005-event-library-relay-consumer-and-migrations.md) | Event library: one relay per service, SmallRye consumers, and migrations shipped by the library | accepted |
-| [0006](0006-audit-events-recorded-by-each-service.md) | Audit events recorded by each service through its outbox, beside its domain events | accepted |
+| [0006](0006-audit-events-recorded-by-each-service.md) | Audit events recorded by each service through its outbox, beside its domain events | accepted, partly superseded by ADR-0008 |
+| [0007](0007-signing-keys-encrypted-in-identity-database.md) | Signing keys stored encrypted in Identity's database and rotated every 30 days | accepted |
+| [0008](0008-audited-actions-choose-recorded-failures.md) | Audited actions choose which failures they record, through two interceptors | accepted |
 
 Add every new ADR to this index in the same pull request.
