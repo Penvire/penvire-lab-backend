@@ -25,6 +25,8 @@ final class OutboxRecords {
     add(headers, "content-type", "application/avro");
     add(headers, "ce_dataschema", row.dataschema);
     add(headers, "ce_traceparent", row.traceparent);
+    // The plain W3C header too: Kafka tracing (SmallRye, OpenTelemetry) reads only traceparent.
+    add(headers, "traceparent", row.traceparent);
     add(headers, "ce_tenantid", row.tenantid);
     return new ProducerRecord<>(row.topic, null, row.subject, row.payload, headers);
   }

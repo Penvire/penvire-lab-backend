@@ -40,6 +40,7 @@ class OutboxRecordsTest {
         header(record, "ce_dataschema"));
     assertEquals("application/avro", header(record, "content-type"));
     assertEquals(TRACEPARENT, header(record, "ce_traceparent"));
+    assertEquals(TRACEPARENT, header(record, "traceparent"));
     assertEquals("tenant-1", header(record, "ce_tenantid"));
   }
 
@@ -48,6 +49,7 @@ class OutboxRecordsTest {
     ProducerRecord<String, byte[]> record = OutboxRecords.toRecord(row());
 
     assertNull(header(record, "ce_traceparent"));
+    assertNull(header(record, "traceparent"));
     assertNull(header(record, "ce_tenantid"));
   }
 
