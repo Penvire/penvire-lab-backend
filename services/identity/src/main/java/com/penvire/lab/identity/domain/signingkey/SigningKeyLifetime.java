@@ -2,6 +2,7 @@ package com.penvire.lab.identity.domain.signingkey;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -31,6 +32,15 @@ public record SigningKeyLifetime(
 
     if (revokedAt != null && !within(revokedAt, publishFrom, publishUntil)) {
       throw new IllegalArgumentException("Signing key can only be revoked while it is published.");
+    }
+
+    publishFrom = normalize(publishFrom);
+    signFrom = normalize(signFrom);
+    signUntil = normalize(signUntil);
+    publishUntil = normalize(publishUntil);
+
+    if (revokedAt != null) {
+      revokedAt = normalize(revokedAt);
     }
   }
 
@@ -109,5 +119,10 @@ public record SigningKeyLifetime(
       throw new IllegalStateException("An expired signing key cannot be revoked");
     }
     return new SigningKeyLifetime(publishFrom, signFrom, signUntil, publishUntil, now);
+  }
+
+  /** Limit Instant size to microseconds, discarding fractional microseconds to prevent database drift. */
+  private static Instant normalize(Instant time) {
+    return time.truncatedTo(ChronoUnit.MICROS);
   }
 }
