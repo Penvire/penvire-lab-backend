@@ -33,3 +33,14 @@ jobs:
         run: |
           openssl version
           ./gradlew build --console=plain
+
+      # The build regenerates every audit manifest (ADR 0006); a committed one must match.
+      - name: Check audit manifests are up to date
+        run: |
+          stale=$(git status --porcelain -- ':(glob)services/*/audit-manifest.yaml')
+          if [ -n "$stale" ]; then
+            echo "$stale"
+            git diff -- ':(glob)services/*/audit-manifest.yaml'
+            echo "::error::Audit manifests are out of date. Run ./gradlew build and commit them."
+            exit 1
+          fi

@@ -1,0 +1,93 @@
+name: Audit manifest
+
+# Comments on a pull request with what its audit manifests change (ADR 0006). The comparison runs
+# the pull request's code with a read-only token; only the second job, which runs no code from the
+# pull request, may write the comment.
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Compare with base
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check out the base branch's manifests
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+          sparse-checkout: services/*/audit-manifest.yaml
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Compare
+        run: ./gradlew auditManifestDiff -PauditManifestBase="$GITHUB_WORKSPACE/base" --console=plain
+
+      - name: Write the comment
+        run: |
+          mkdir comment
+          sections=$(cat services/*/build/audit-manifest-diff.md 2>/dev/null || true)
+          {
+            echo '<!-- audit-manifest -->'
+            echo '## Audit manifest'
+            echo
+            if [ -n "$sections" ]; then
+              echo "$sections"
+              echo yes > comment/changed
+            else
+              echo 'This pull request no longer changes what is audited.'
+            fi
+          } > comment/body.md
+          cat comment/body.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: audit-manifest-comment
+          path: comment/
+          retention-days: 1
+
+  comment:
+    name: Comment
+    needs: compare
+    # Pull requests from forks get a read-only token and no comment.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: audit-manifest-comment
+          path: comment
+
+      # One comment per pull request, updated on every push. A pull request that never changed
+      # what is audited gets none.
+      - name: Post or update the comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- audit-manifest -->"))) | .id' \
+            | head -n 1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/$REPO/issues/comments/$id" -F body=@comment/body.md > /dev/null
+          elif [ -f comment/changed ]; then
+            gh pr comment "$PR" --repo "$REPO" --body-file comment/body.md
+          fi

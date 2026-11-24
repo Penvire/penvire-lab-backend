@@ -31,6 +31,9 @@ openapi-request-validator = "3.0.0"
 # Time-ordered UUIDv7 identifiers.
 jug = "5.2.0"
 
+# Reads compiled @Audited methods for the audit manifest; the version the Quarkus BOM pins.
+jandex = "3.6.0"
+
 [libraries]
 # Quarkus BOM and its Gradle integration.
 quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
@@ -60,3 +63,6 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 
 # UUIDv7 Generator
 jug = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "jug" }
+
+# Class file index without class loading.
+jandex = { module = "io.smallrye:jandex", version.ref = "jandex" }
