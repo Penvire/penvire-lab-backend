@@ -2,10 +2,11 @@ package com.penvire.lab.identity.adapter.in.rest;
 
 import com.penvire.lab.identity.application.port.in.GetJwksSetUseCase;
 import com.penvire.lab.identity.config.IdentityConfig;
-import com.penvire.lab.identity.domain.signingkey.PublicSigningKey;
+import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.server.api.DiscoveryApi;
 import com.penvire.lab.identity.server.model.JwkSet;
 import com.penvire.lab.identity.server.model.OpenIdConfiguration;
+
 import java.util.List;
 
 public class RestDiscoveryResource implements DiscoveryApi {
@@ -22,7 +23,7 @@ public class RestDiscoveryResource implements DiscoveryApi {
 
   @Override
   public JwkSet getJwks() {
-    List<PublicSigningKey> keys = getJwksSetUseCase.getJwksSet();
+    List<SigningKey> keys = getJwksSetUseCase.getJwksSet();
     return new JwkSet(jwkMapper.toJwks(keys));
   }
 

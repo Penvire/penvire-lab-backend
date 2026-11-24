@@ -44,7 +44,8 @@ Add `## Considered options` only when the rejected alternatives are worth rememb
 | [0004](0004-events-written-with-the-latest-revision-of-their-package.md) | Events through a transactional outbox, written with the latest schema revision of their package | accepted |
 | [0005](0005-event-library-relay-consumer-and-migrations.md) | Event library: one relay per service, SmallRye consumers, and migrations shipped by the library | accepted |
 | [0006](0006-audit-events-recorded-by-each-service.md) | Audit events recorded by each service through its outbox, beside its domain events | accepted, partly superseded by ADR-0008 |
-| [0007](0007-signing-keys-encrypted-in-identity-database.md) | Signing keys stored encrypted in Identity's database and rotated every 30 days | accepted |
+| [0007](0007-signing-keys-encrypted-in-identity-database.md) | Signing keys stored encrypted in Identity's database and rotated every 30 days | accepted, partly superseded by ADR-0009 |
 | [0008](0008-audited-actions-choose-recorded-failures.md) | Audited actions choose which failures they record, through two interceptors | accepted |
+| [0009](0009-opaque-refresh-tokens-and-revoked-signing-keys.md) | Opaque refresh tokens, and revoked signing keys kept until they expire | accepted |
 
 Add every new ADR to this index in the same pull request.

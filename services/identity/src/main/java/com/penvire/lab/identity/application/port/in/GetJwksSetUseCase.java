@@ -1,8 +1,9 @@
 package com.penvire.lab.identity.application.port.in;
 
-import com.penvire.lab.identity.domain.signingkey.PublicSigningKey;
+import com.penvire.lab.identity.domain.signingkey.SigningKey;
+
 import java.util.List;
 
 public interface GetJwksSetUseCase {
-  List<PublicSigningKey> getJwksSet();
+  List<SigningKey> getJwksSet();
 }
