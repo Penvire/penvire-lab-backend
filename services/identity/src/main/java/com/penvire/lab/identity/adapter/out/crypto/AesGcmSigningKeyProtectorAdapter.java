@@ -5,11 +5,14 @@ import com.penvire.lab.identity.application.port.out.SigningKeyProtectorPort;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
 import javax.crypto.Cipher;
@@ -37,6 +40,8 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
     if (!privateKey.getAlgorithm().equals(key.publicKey().getAlgorithm())) {
       throw new IllegalArgumentException("The private key does not belong to key " + key.kid());
     }
+
+    requireCorrespondingKeys(key, privateKey);
 
     var kek = ring.current();
     byte[] nonce = new byte[NONCE_BYTES];
@@ -98,6 +103,34 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
         .orElse(false);
   }
 
+  private void requireCorrespondingKeys(SigningKey key, PrivateKey priv) {
+    String data = "Hello World!";
+    byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
+    String alg = getSignatureAlgorithm(key.algorithm());
+
+    byte[] signature;
+
+    try {
+      Signature signer = Signature.getInstance(alg);
+      signer.initSign(priv);
+      signer.update(dataBytes);
+      signature = signer.sign();
+    } catch (GeneralSecurityException e) {
+      throw new IllegalStateException("Cannot sign data with key " + key.kid(), e);
+    }
+
+    try {
+      Signature verifier = Signature.getInstance(alg);
+      verifier.initVerify(key.publicKey());
+      verifier.update(dataBytes);
+      if(!verifier.verify(signature)) {
+        throw new IllegalStateException("Cannot verify data with key " + key.kid());
+      }
+    } catch (GeneralSecurityException e) {
+      throw new IllegalStateException("Cannot verify data with key " + key.kid(), e);
+    }
+  }
+
   private static byte[] compute(KeyEncryptionKey kek, SigningKey key) {
     try {
       var mac = Mac.getInstance(MAC);
@@ -112,6 +145,13 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
     return switch (algorithm) {
       case ML_DSA_65 -> "ML-DSA";
       case RS256 -> "RSA";
+    };
+  }
+
+  private static String getSignatureAlgorithm(SigningKeyAlgorithm algorithm) {
+    return switch (algorithm) {
+      case ML_DSA_65 -> "ML-DSA-65";
+      case RS256 -> "SHA256withRSA";
     };
   }
 }
