@@ -1,7 +1,6 @@
 package com.penvire.lab.identity.config;
 
 import io.smallrye.config.ConfigMapping;
-
 import java.util.Map;
 
 /** The key-encryption keys (ADR 0007): 32 random bytes each, base64-encoded. */

@@ -7,12 +7,11 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
 import org.jspecify.annotations.Nullable;
-
-import java.time.Instant;
-import java.util.UUID;
 
 /**
  * A signing key as stored (ADR 0007). Holds only stored bytes: the out-adapter encrypts the private

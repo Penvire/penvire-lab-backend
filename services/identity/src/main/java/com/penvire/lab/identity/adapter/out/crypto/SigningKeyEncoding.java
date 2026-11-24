@@ -1,19 +1,18 @@
 package com.penvire.lab.identity.adapter.out.crypto;
 
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
-import org.jspecify.annotations.Nullable;
-
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Canonical bytes for the GCM associated data and the row MAC. Every field is length-prefixed, so
- * no two different keys encode alike. Instants count microseconds: PostgreSQL stores no more, and
- * a MAC over nanoseconds would fail on every key read back.
+ * no two different keys encode alike. Instants count microseconds: PostgreSQL stores no more, and a
+ * MAC over nanoseconds would fail on every key read back.
  */
 final class SigningKeyEncoding {
 

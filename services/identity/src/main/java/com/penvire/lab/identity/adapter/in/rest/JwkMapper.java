@@ -4,13 +4,6 @@ import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.identity.server.model.Jwk;
 import com.penvire.lab.identity.server.model.JwkSet;
-import org.jspecify.annotations.Nullable;
-import org.mapstruct.AfterMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.MappingTarget;
-
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
@@ -23,6 +16,12 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
+import org.mapstruct.AfterMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.MappingTarget;
 
 /**
  * Maps signing keys to public JWKs and back. ML-DSA-65 keys are RFC 9964 AKP keys with the raw

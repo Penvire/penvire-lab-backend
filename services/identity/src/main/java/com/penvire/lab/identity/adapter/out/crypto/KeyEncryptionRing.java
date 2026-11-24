@@ -2,10 +2,6 @@ package com.penvire.lab.identity.adapter.out.crypto;
 
 import com.penvire.lab.identity.config.SigningKeyConfig;
 import jakarta.inject.Singleton;
-
-import javax.crypto.KDF;
-import javax.crypto.spec.HKDFParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -13,8 +9,13 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import javax.crypto.KDF;
+import javax.crypto.spec.HKDFParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
-/** All configured KEKs, checked and derived once aat startup; a bad configuration stops Identity. */
+/**
+ * All configured KEKs, checked and derived once aat startup; a bad configuration stops Identity.
+ */
 @Singleton
 public class KeyEncryptionRing {
 
@@ -61,6 +62,7 @@ public class KeyEncryptionRing {
     }
     return material;
   }
+
   private static KeyEncryptionKey derive(String id, byte[] material) {
     try {
       var ikm = new SecretKeySpec(material, "HKDF");

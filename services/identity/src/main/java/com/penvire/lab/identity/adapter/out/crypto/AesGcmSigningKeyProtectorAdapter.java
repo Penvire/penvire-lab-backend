@@ -5,10 +5,6 @@ import com.penvire.lab.identity.application.port.out.SigningKeyProtectorPort;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import jakarta.enterprise.context.ApplicationScoped;
-
-import javax.crypto.Cipher;
-import javax.crypto.Mac;
-import javax.crypto.spec.GCMParameterSpec;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
@@ -16,6 +12,9 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
+import javax.crypto.spec.GCMParameterSpec;
 
 /** AES-256-GCM for privaate keys and HMAC-SHA256 for rows, under KEKs from configuration. */
 @ApplicationScoped
@@ -66,7 +65,8 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
 
     try {
       var cipher = Cipher.getInstance(CIPHER);
-      cipher.init(Cipher.DECRYPT_MODE, kek.encryption(), new GCMParameterSpec(TAG_BITS, sealed.nonce()));
+      cipher.init(
+          Cipher.DECRYPT_MODE, kek.encryption(), new GCMParameterSpec(TAG_BITS, sealed.nonce()));
       cipher.updateAAD(SigningKeyEncoding.associatedData(key, kek.id()));
       plaintext = cipher.doFinal(sealed.ciphertext());
     } catch (GeneralSecurityException e) {
@@ -86,13 +86,16 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
 
   @Override
   public byte[] mac(SigningKey key, String kekId) {
-    var kek = ring.getById(kekId).orElseThrow(() -> new IllegalStateException("Unknown KEK " + kekId));
+    var kek =
+        ring.getById(kekId).orElseThrow(() -> new IllegalStateException("Unknown KEK " + kekId));
     return compute(kek, key);
   }
 
   @Override
   public boolean isIntact(SigningKey key, String kekId, byte[] mac) {
-    return ring.getById(kekId).map(kek -> MessageDigest.isEqual(compute(kek, key), mac)).orElse(false);
+    return ring.getById(kekId)
+        .map(kek -> MessageDigest.isEqual(compute(kek, key), mac))
+        .orElse(false);
   }
 
   private static byte[] compute(KeyEncryptionKey kek, SigningKey key) {
@@ -104,6 +107,7 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
       throw new IllegalStateException("Cannot compute the MAC of " + key.kid(), e);
     }
   }
+
   private static String keyFactoryAlgorithm(SigningKeyAlgorithm algorithm) {
     return switch (algorithm) {
       case ML_DSA_65 -> "ML-DSA";

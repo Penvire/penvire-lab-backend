@@ -1,7 +1,6 @@
 package com.penvire.lab.identity.application.port.out;
 
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
-
 import java.security.PrivateKey;
 
 /**
@@ -10,7 +9,10 @@ import java.security.PrivateKey;
  */
 public interface SigningKeyProtectorPort {
 
-  /** Encrypts {@code privateKey} under the current KEK, bound to the key's id, algorithm and public key. */
+  /**
+   * Encrypts {@code privateKey} under the current KEK, bound to the key's id, algorithm and public
+   * key.
+   */
   SealedPrivateKey seal(SigningKey key, PrivateKey privateKey);
 
   /**
@@ -20,7 +22,10 @@ public interface SigningKeyProtectorPort {
    */
   PrivateKey unseal(SigningKey key, SealedPrivateKey sealed);
 
-  /** The MAC over the key's id, algorithm, public key, lifetime and revocation under KEK {@code kekId}. */
+  /**
+   * The MAC over the key's id, algorithm, public key, lifetime and revocation under KEK {@code
+   * kekId}.
+   */
   byte[] mac(SigningKey key, String kekId);
 
   /** Whether {@code mac} matches the key; false for an unknown KEK. */

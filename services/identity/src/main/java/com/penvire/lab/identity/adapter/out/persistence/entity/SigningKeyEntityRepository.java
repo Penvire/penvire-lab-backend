@@ -2,9 +2,7 @@ package com.penvire.lab.identity.adapter.out.persistence.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
-
 import java.util.UUID;
 
 @ApplicationScoped
-public class SigningKeyEntityRepository implements PanacheRepositoryBase<SigningKeyEntity, UUID> {
-}
+public class SigningKeyEntityRepository implements PanacheRepositoryBase<SigningKeyEntity, UUID> {}

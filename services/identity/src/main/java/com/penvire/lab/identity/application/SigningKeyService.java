@@ -5,7 +5,6 @@ import com.penvire.lab.identity.application.port.out.SigningKeyPort;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-
 import java.time.Clock;
 import java.util.List;
 

@@ -13,7 +13,6 @@ import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
-
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.List;
@@ -30,7 +29,10 @@ public class SigningKeyPersistenceAdapter implements SigningKeyPort {
   private final SigningKeyPersistenceMapper mapper;
   private final SigningKeyProtectorPort protector;
 
-  public SigningKeyPersistenceAdapter(SigningKeyEntityRepository entities, SigningKeyPersistenceMapper mapper, SigningKeyProtectorPort protector) {
+  public SigningKeyPersistenceAdapter(
+      SigningKeyEntityRepository entities,
+      SigningKeyPersistenceMapper mapper,
+      SigningKeyProtectorPort protector) {
     this.entities = entities;
     this.mapper = mapper;
     this.protector = protector;
@@ -109,8 +111,8 @@ public class SigningKeyPersistenceAdapter implements SigningKeyPort {
     // The ciphertext is not part of the row MAC, so erasing it needs no new MAC.
     return entities.update(
         "encryptedPrivateKey = null, privateKeyNonce = null"
-        + " where encryptedPrivateKey is not null"
-        + " and (signUntil <= ?1 or revokedAt <= ?1)",
+            + " where encryptedPrivateKey is not null"
+            + " and (signUntil <= ?1 or revokedAt <= ?1)",
         now);
   }
 
@@ -134,6 +136,7 @@ public class SigningKeyPersistenceAdapter implements SigningKeyPort {
     }
     return Optional.of(key);
   }
+
   private ActiveSigningKey activate(SigningKeyEntity entity) {
     byte[] ciphertext = entity.getEncryptedPrivateKey();
     byte[] nonce = entity.getPrivateKeyNonce();

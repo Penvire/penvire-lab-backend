@@ -6,7 +6,6 @@ import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.server.api.DiscoveryApi;
 import com.penvire.lab.identity.server.model.JwkSet;
 import com.penvire.lab.identity.server.model.OpenIdConfiguration;
-
 import java.util.List;
 
 public class RestDiscoveryResource implements DiscoveryApi {
