@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /** Stores signing keys with their private part protected (ADR 0007, ADR 0009) */
-public interface SigningKeyPort {
+public interface SigningKeyPersistencePort {
 
   /** Stores a new key together with its private part */
   void insert(SigningKey key, PrivateKey privateKey);

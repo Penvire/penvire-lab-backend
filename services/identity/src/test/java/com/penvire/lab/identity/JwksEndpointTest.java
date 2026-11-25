@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntityRepository;
-import com.penvire.lab.identity.application.port.out.SigningKeyPort;
+import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyLifetime;
@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 @QuarkusTest
 class JwksEndpointTest {
 
-  @Inject SigningKeyPort keys;
+  @Inject SigningKeyPersistencePort keys;
   @Inject SigningKeyEntityRepository entities;
   @Inject Clock clock;
 

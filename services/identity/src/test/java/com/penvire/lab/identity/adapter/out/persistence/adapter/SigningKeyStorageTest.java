@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntity;
 import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntityRepository;
-import com.penvire.lab.identity.application.port.out.SigningKeyPort;
+import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyLifetime;
@@ -51,7 +51,7 @@ class SigningKeyStorageTest {
   private static final KeyPair ML_DSA = generate("ML-DSA-65");
   private static final KeyPair RSA = generate("RSA");
 
-  @Inject SigningKeyPort keys;
+  @Inject SigningKeyPersistencePort keys;
   @Inject SigningKeyEntityRepository entities;
   @Inject Clock clock;
 
