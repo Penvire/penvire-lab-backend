@@ -13,9 +13,7 @@ import javax.crypto.KDF;
 import javax.crypto.spec.HKDFParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-/**
- * All configured KEKs, checked and derived once aat startup; a bad configuration stops Identity.
- */
+/** All configured KEKs, checked and derived once at startup; a bad configuration stops Identity. */
 @Singleton
 public class KeyEncryptionRing {
 

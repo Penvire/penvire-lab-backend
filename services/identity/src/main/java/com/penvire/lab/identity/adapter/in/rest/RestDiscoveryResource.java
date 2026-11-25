@@ -23,7 +23,7 @@ public class RestDiscoveryResource implements DiscoveryApi {
   @Override
   public JwkSet getJwks() {
     List<SigningKey> keys = getJwksSetUseCase.getJwksSet();
-    return new JwkSet(jwkMapper.toJwks(keys));
+    return jwkMapper.toJwkSet(keys);
   }
 
   @Override

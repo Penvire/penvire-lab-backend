@@ -95,13 +95,17 @@ public abstract class JwkMapper {
           throw new IllegalArgumentException(
               "AKP pub must be " + ML_DSA_65_PUBLIC_KEY_BYTES + " bytes, was " + raw.length);
         }
-        yield generatePublic("ML-DSA", new X509EncodedKeySpec(concat(ML_DSA_65_SPKI_PREFIX, raw)));
+        yield generatePublic(
+            SigningKeyAlgorithm.ML_DSA_65.keyFactoryAlgorithm(),
+            new X509EncodedKeySpec(concat(ML_DSA_65_SPKI_PREFIX, raw)));
       }
       case KTY_RSA -> {
         requireAlg(jwk, SigningKeyAlgorithm.RS256);
         var modulus = new BigInteger(1, decodeBase64Url("n", jwk.getN()));
         var exponent = new BigInteger(1, decodeBase64Url("e", jwk.getE()));
-        yield generatePublic("RSA", new RSAPublicKeySpec(modulus, exponent));
+        yield generatePublic(
+            SigningKeyAlgorithm.RS256.keyFactoryAlgorithm(),
+            new RSAPublicKeySpec(modulus, exponent));
       }
       default -> throw new IllegalArgumentException("Unsupported JWK kty: " + jwk.getKty());
     };

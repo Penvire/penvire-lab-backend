@@ -59,13 +59,8 @@ public interface SigningKeyPersistenceMapper extends EntityMapper<SigningKey, Si
   }
 
   default PublicKey decodePublicKey(SigningKeyAlgorithm algorithm, byte[] encoded) {
-    var keyFactoryAlgorithm =
-        switch (algorithm) {
-          case ML_DSA_65 -> "ML-DSA";
-          case RS256 -> "RSA";
-        };
     try {
-      return KeyFactory.getInstance(keyFactoryAlgorithm)
+      return KeyFactory.getInstance(algorithm.keyFactoryAlgorithm())
           .generatePublic(new X509EncodedKeySpec(encoded));
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException("Stored " + algorithm + " public key is unreadable", e);

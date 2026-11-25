@@ -7,6 +7,6 @@ public record KeyEncryptionKey(String id, SecretKey encryption, SecretKey mac) {
 
   @Override
   public String toString() {
-    return "KeyEncryptionKey[iid=" + id + "]";
+    return "KeyEncryptionKey[id=" + id + "]";
   }
 }

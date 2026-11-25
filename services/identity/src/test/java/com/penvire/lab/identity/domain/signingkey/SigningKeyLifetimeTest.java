@@ -75,8 +75,8 @@ class SigningKeyLifetimeTest {
   }
 
   @Test
-  void rejectsARevocationBeforeTheKeyWasPublished() {
-    assertThrows(IllegalArgumentException.class, () -> revokedAt(at(0).minusNanos(1)));
+  void acceptsARevocationBeforeTheKeyIsPublished() {
+    assertDoesNotThrow(() -> revokedAt(at(-1)));
   }
 
   @Test
@@ -198,6 +198,16 @@ class SigningKeyLifetimeTest {
         () -> assertEquals(at(0), LIFETIME.revokeAt(at(0)).revokedAt()),
         () -> assertEquals(at(100), LIFETIME.revokeAt(at(100)).revokedAt()),
         () -> assertEquals(at(721), LIFETIME.revokeAt(at(721)).revokedAt()));
+  }
+
+  @Test
+  void canRevokeBeforeTheKeyIsPublished() {
+    var revoked = LIFETIME.revokeAt(at(-1));
+
+    assertAll(
+        () -> assertEquals(at(-1), revoked.revokedAt()),
+        () -> assertEquals(SigningKeyPhase.REVOKED, revoked.phaseAt(at(-1))),
+        () -> assertFalse(revoked.isPublishedAt(at(0))));
   }
 
   @Test

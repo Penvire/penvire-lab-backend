@@ -10,11 +10,11 @@ import java.util.List;
 
 @ApplicationScoped
 public class SigningKeyService implements GetJwksSetUseCase {
-  private final SigningKeyPort jwksRepository;
+  private final SigningKeyPort signingKeys;
   private final Clock clock;
 
-  public SigningKeyService(SigningKeyPort jwksRepository, Clock clock) {
-    this.jwksRepository = jwksRepository;
+  public SigningKeyService(SigningKeyPort signingKeys, Clock clock) {
+    this.signingKeys = signingKeys;
     this.clock = clock;
   }
 
@@ -22,6 +22,6 @@ public class SigningKeyService implements GetJwksSetUseCase {
   @Override
   @Transactional
   public List<SigningKey> getJwksSet() {
-    return jwksRepository.findPublishedAt(clock.instant());
+    return signingKeys.findPublishedAt(clock.instant());
   }
 }

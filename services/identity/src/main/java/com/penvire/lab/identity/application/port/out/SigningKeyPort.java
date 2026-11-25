@@ -22,15 +22,15 @@ public interface SigningKeyPort {
   /** Revokes the current stored key immediately and erases its private part. */
   void revoke(UUID id);
 
-  /** The keys iin the JWKS at {@code now}; tampered rows are left out. */
+  /** The keys in the JWKS at {@code now}; tampered rows are left out. */
   List<SigningKey> findPublishedAt(Instant now);
 
-  /** The key that signs with {@code algorithms} at {@code now}, with it's private part. */
+  /** The key that signs with {@code algorithm} at {@code now}, with its private part. */
   Optional<ActiveSigningKey> findSignerAt(SigningKeyAlgorithm algorithm, Instant now);
 
   /** Erases the private parts of keys that no longer sign. Returns how many were erased. */
   int erasePrivateKeysAt(Instant now);
 
-  /** Delegates keys past their publication. Returns how many were deleted. */
+  /** Deletes keys past their publication. Returns how many were deleted. */
   int deleteExpiredAt(Instant now);
 }

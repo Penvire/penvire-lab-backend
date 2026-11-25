@@ -24,7 +24,7 @@ import org.jspecify.annotations.Nullable;
 @SuppressWarnings("NullAway.Init")
 public class SigningKeyEntity {
 
-  /** Assigned by {@code IIdGenerator}; its string form is the JWS {@code kid} */
+  /** Assigned by {@code IdGenerator}; its string form is the JWS {@code kid}. */
   @Id
   @Column(name = "id", nullable = false, updatable = false)
   private UUID id;
@@ -37,7 +37,10 @@ public class SigningKeyEntity {
   @Column(nullable = false, name = "public_key", updatable = false)
   private byte[] publicKey;
 
-  /** AES-256-GCM ciphertext of the PKCS#8 private key, tag included; null once retired. */
+  /**
+   * AES-256-GCM ciphertext of the PKCS#8 private key, tag included; erased once the key stops
+   * signing or is revoked.
+   */
   @Column(name = "encrypted_private_key")
   private byte @Nullable [] encryptedPrivateKey;
 
@@ -49,7 +52,7 @@ public class SigningKeyEntity {
   @Column(name = "kek_id", nullable = false)
   private String kekId;
 
-  /** HMAC-SHA256 over id, purpose, algorithm, public key and the four instants. */
+  /** HMAC-SHA256 over id, algorithm, public key, the four instants and {@code revokedAt}. */
   @Column(name = "row_mac", nullable = false)
   private byte[] rowMac;
 

@@ -65,7 +65,7 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
   public PrivateKey unseal(SigningKey key, SealedPrivateKey sealed) {
     var kek =
         ring.getById(sealed.kekId())
-            .orElseThrow(() -> new IllegalArgumentException("Cannot find KEK " + sealed.kekId()));
+            .orElseThrow(() -> new IllegalStateException("Unknown KEK " + sealed.kekId()));
 
     byte[] plaintext;
 
@@ -76,12 +76,12 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
       cipher.updateAAD(SigningKeyEncoding.associatedData(key, kek.id()));
       plaintext = cipher.doFinal(sealed.ciphertext());
     } catch (GeneralSecurityException e) {
-      // Never the plaintext or the KEK in the message: aa wrong KEK, nonce or row all end here.
+      // Never the plaintext or the KEK in the message: a wrong KEK, nonce or row all end here.
       throw new IllegalStateException("Cannot unseal the private key of " + key.kid(), e);
     }
 
     try {
-      return KeyFactory.getInstance(keyFactoryAlgorithm(key.algorithm()))
+      return KeyFactory.getInstance(key.algorithm().keyFactoryAlgorithm())
           .generatePrivate(new PKCS8EncodedKeySpec(plaintext));
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException("The private key of " + key.kid() + " is unreadable", e);
@@ -138,13 +138,6 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException("Cannot compute the MAC of " + key.kid(), e);
     }
-  }
-
-  private static String keyFactoryAlgorithm(SigningKeyAlgorithm algorithm) {
-    return switch (algorithm) {
-      case ML_DSA_65 -> "ML-DSA";
-      case RS256 -> "RSA";
-    };
   }
 
   private static String getSignatureAlgorithm(SigningKeyAlgorithm algorithm) {

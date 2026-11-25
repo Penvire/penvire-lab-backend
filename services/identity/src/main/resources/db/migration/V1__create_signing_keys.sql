@@ -18,10 +18,13 @@ create table signing_keys (
 
     constraint signing_keys_lifetime_in_order
         check (publish_from <= sign_from and sign_from < sign_until and sign_until <= publish_until),
-    constraint signing_keys_revoked_while_published
-        check (revoked_at is null or (revoked_at >= publish_from and revoked_at < publish_until)),
+    -- A key can be revoked before it is published, never after it expired.
+    constraint signing_keys_revoked_before_expiry
+        check (revoked_at is null or revoked_at < publish_until),
     constraint signing_keys_private_key_with_nonce
         check ((encrypted_private_key is null) = (private_key_nonce is null)),
+    constraint signing_keys_revoked_without_private_key
+        check (revoked_at is null or encrypted_private_key is null),
     -- At most one unrevoked key per algorithm signs at any instant.
     constraint signing_keys_one_signer_per_algorithm
         exclude using gist (

@@ -38,8 +38,8 @@ public record SigningKeyLifetime(
           "Signing key must stay published at least until it stops signing");
     }
 
-    if (revokedAt != null && !within(revokedAt, publishFrom, publishUntil)) {
-      throw new IllegalArgumentException("Signing key can only be revoked while it is published.");
+    if (revokedAt != null && !revokedAt.isBefore(publishUntil)) {
+      throw new IllegalArgumentException("Signing key cannot be revoked after it expired");
     }
   }
 
@@ -109,16 +109,17 @@ public record SigningKeyLifetime(
   /**
    * Revokes at {@code now}: from then on the key is neither published nor signing, and tokens it
    * signed no longer verify. The instants stay, so the key shows as revoked until it would have
-   * expired.
+   * expired. A key that is not published yet can be revoked too, so a key that leaks early still
+   * leaves a row.
    *
-   * @throws IllegalStateException if the key is already revoked or outside its publication window
+   * @throws IllegalStateException if the key is already revoked or has expired
    */
   public SigningKeyLifetime revokeAt(Instant now) {
     if (isRevoked()) {
       throw new IllegalStateException("The signing key is already revoked");
     }
-    if (!within(now, publishFrom, publishUntil)) {
-      throw new IllegalStateException("Only a published signing key can be revoked");
+    if (!now.isBefore(publishUntil)) {
+      throw new IllegalStateException("An expired signing key cannot be revoked");
     }
     return new SigningKeyLifetime(publishFrom, signFrom, signUntil, publishUntil, now);
   }
