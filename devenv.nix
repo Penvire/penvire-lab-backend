@@ -167,5 +167,19 @@ in
       stages = [ "commit-msg" ];
     };
     actionlint.enable = true;
+    # Formats Java sources with google-java-format. The hook runner stashes unstaged changes
+    # first and fails the commit if the hook changed a file, so a commit never differs from
+    # what was staged: re-stage the formatted files and commit again. Sets JAVA_HOME itself,
+    # so commits from outside the shell work too.
+    spotless = {
+      enable = true;
+      name = "Spotless";
+      entry = "${pkgs.writeShellScript "spotless-apply" ''
+        export JAVA_HOME=${config.languages.java.jdk.package}
+        exec ./gradlew spotlessApply --quiet
+      ''}";
+      files = "\\.java$";
+      pass_filenames = false;
+    };
   };
 }
