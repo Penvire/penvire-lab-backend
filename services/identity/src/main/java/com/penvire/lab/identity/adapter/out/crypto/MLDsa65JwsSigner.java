@@ -1,4 +1,4 @@
-package com.penvire.lab.identity.adapter.out.signing;
+package com.penvire.lab.identity.adapter.out.crypto;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
