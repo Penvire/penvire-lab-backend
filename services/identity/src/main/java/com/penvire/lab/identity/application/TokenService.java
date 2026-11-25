@@ -36,10 +36,15 @@ public class TokenService implements IssueAccessTokenUseCase {
     this.signingKeyPersistencePort = signingKeyPersistencePort;
   }
 
-  /** The use case owns the transaction; the persistence adapter requires one. */
+  @Override
+  public String issueAccessToken(String subject, String clientId, String audience) {
+    return issueAccessToken(subject, clientId, audience, SigningKeyAlgorithm.ML_DSA_65);
+  }
+
   @Override
   @Transactional
-  public String issueAccessToken(String subject, String clientId, String audience) {
+  public String issueAccessToken(
+      String subject, String clientId, String audience, SigningKeyAlgorithm algorithm) {
     var now = clock.instant();
 
     var claims =
@@ -55,8 +60,9 @@ public class TokenService implements IssueAccessTokenUseCase {
 
     ActiveSigningKey signingKey =
         signingKeyPersistencePort
-            .findSignerAt(SigningKeyAlgorithm.ML_DSA_65, now)
-            .orElseThrow(() -> new IllegalStateException("No ML-DSA-65 key signs at " + now));
+            .findSignerAt(algorithm, now)
+            .orElseThrow(() ->
+                new IllegalStateException("No " + algorithm.joseName() + " key signs at " + now));
 
     return signer.sign(claims, signingKey);
   }

@@ -16,16 +16,19 @@ import com.penvire.lab.jwt.JwtValidationPolicy;
 import com.penvire.lab.jwt.JwtValidator;
 import com.penvire.lab.jwt.JwtVerificationException;
 import com.penvire.lab.jwt.jws.MLDSA65JwsVerifier;
+import com.penvire.lab.jwt.jws.Rs256JwsVerifier;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.path.json.JsonPath;
 import jakarta.inject.Inject;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
+import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Clock;
 import java.time.Duration;
@@ -96,6 +99,26 @@ class IssueAccessTokenEndToEndTest {
   }
 
   @Test
+  void aConsumerVerifiesAnIssuedRs256TokenWithTheKeyFromTheJwks() {
+    var now = clock.instant();
+    store(
+        SigningKeyAlgorithm.ML_DSA_65, generate(SigningKeyAlgorithm.ML_DSA_65), signingAround(now));
+    var rsaSigner =
+        store(SigningKeyAlgorithm.RS256, generate(SigningKeyAlgorithm.RS256), signingAround(now));
+
+    var token =
+        issueAccessToken.issueAccessToken(SUBJECT, CLIENT_ID, AUDIENCE, SigningKeyAlgorithm.RS256);
+    var claims = consumer(SigningKeyAlgorithm.RS256).validate(token, policy("RS256")).claims();
+
+    assertEquals(identityConfig.issuer().toString(), claims.path("iss").textValue());
+    assertEquals(SUBJECT, claims.path("sub").textValue());
+    assertEquals(CLIENT_ID, claims.path("client_id").textValue());
+    assertEquals(AUDIENCE, claims.path("aud").textValue());
+    assertEquals("RS256", header(token).get("alg"));
+    assertEquals(rsaSigner.kid(), header(token).get("kid"));
+  }
+
+  @Test
   void refusesToIssueWithoutAKeyThatSignsNow() {
     store(generate(), pendingAfter(clock.instant()));
 
@@ -104,25 +127,48 @@ class IssueAccessTokenEndToEndTest {
         () -> issueAccessToken.issueAccessToken(SUBJECT, CLIENT_ID, AUDIENCE));
   }
 
+  @Test
+  void refusesToIssueRs256WhenOnlyAnMlDsaKeySignsNow() {
+    store(generate(), signingAround(clock.instant()));
+
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            issueAccessToken.issueAccessToken(
+                SUBJECT, CLIENT_ID, AUDIENCE, SigningKeyAlgorithm.RS256));
+  }
+
   /** A consumer that trusts only the keys the JWKS endpoint serves, looked up by kid. */
   private JwtValidator consumer() {
+    return consumer(SigningKeyAlgorithm.ML_DSA_65);
+  }
+
+  private JwtValidator consumer(SigningKeyAlgorithm algorithm) {
     var jwks = jwks();
+    var joseName = algorithm.joseName();
     return new JwtValidator(
-        Map.of("ML-DSA-65", new MLDSA65JwsVerifier()),
+        Map.of("ML-DSA-65", new MLDSA65JwsVerifier(), "RS256", new Rs256JwsVerifier()),
         clock,
-        (issuer, keyId, algorithm, type) -> {
-          assertEquals("ML-DSA-65", algorithm);
+        (issuer, keyId, resolvedAlgorithm, type) -> {
+          assertEquals(joseName, resolvedAlgorithm);
           assertEquals(JwtType.ACCESS, type);
-          return publicKey(jwks, keyId);
+          return switch (algorithm) {
+            case ML_DSA_65 -> publicKey(jwks, keyId);
+            case RS256 -> rsaPublicKey(jwks, keyId);
+          };
         });
   }
 
   private JwtValidationPolicy policy() {
+    return policy("ML-DSA-65");
+  }
+
+  private JwtValidationPolicy policy(String algorithm) {
     return new JwtValidationPolicy(
         identityConfig.issuer().toString(),
         Set.of(AUDIENCE),
         Set.of(JwtType.ACCESS),
-        Set.of("ML-DSA-65"),
+        Set.of(algorithm),
         Duration.ofSeconds(30));
   }
 
@@ -153,6 +199,23 @@ class IssueAccessTokenEndToEndTest {
     }
   }
 
+  private static PublicKey rsaPublicKey(JsonPath jwks, String kid) {
+    Map<String, Object> jwk = jwks.getMap("keys.find { it.kid == '" + kid + "' }");
+    if (jwk == null) {
+      throw new JwtVerificationException("The JWKS has no key " + kid);
+    }
+    assertEquals("RSA", jwk.get("kty"));
+    assertEquals("RS256", jwk.get("alg"));
+
+    var modulus = new BigInteger(1, Base64.getUrlDecoder().decode((String) jwk.get("n")));
+    var exponent = new BigInteger(1, Base64.getUrlDecoder().decode((String) jwk.get("e")));
+    try {
+      return KeyFactory.getInstance("RSA").generatePublic(new RSAPublicKeySpec(modulus, exponent));
+    } catch (GeneralSecurityException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
   private static Map<String, Object> header(String token) {
     var json =
         new String(
@@ -161,9 +224,12 @@ class IssueAccessTokenEndToEndTest {
   }
 
   private SigningKey store(KeyPair pair, SigningKeyLifetime lifetime) {
-    var key =
-        new SigningKey(
-            UUID.randomUUID(), SigningKeyAlgorithm.ML_DSA_65, pair.getPublic(), lifetime);
+    return store(SigningKeyAlgorithm.ML_DSA_65, pair, lifetime);
+  }
+
+  private SigningKey store(
+      SigningKeyAlgorithm algorithm, KeyPair pair, SigningKeyLifetime lifetime) {
+    var key = new SigningKey(UUID.randomUUID(), algorithm, pair.getPublic(), lifetime);
     QuarkusTransaction.requiringNew().run(() -> keys.insert(key, pair.getPrivate()));
     return key;
   }
@@ -186,8 +252,21 @@ class IssueAccessTokenEndToEndTest {
   }
 
   private static KeyPair generate() {
+    return generate(SigningKeyAlgorithm.ML_DSA_65);
+  }
+
+  private static KeyPair generate(SigningKeyAlgorithm algorithm) {
     try {
-      return KeyPairGenerator.getInstance("ML-DSA-65").generateKeyPair();
+      var generator =
+          KeyPairGenerator.getInstance(
+              switch (algorithm) {
+                case ML_DSA_65 -> "ML-DSA-65";
+                case RS256 -> "RSA";
+              });
+      if (algorithm == SigningKeyAlgorithm.RS256) {
+        generator.initialize(2048);
+      }
+      return generator.generateKeyPair();
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException(e);
     }

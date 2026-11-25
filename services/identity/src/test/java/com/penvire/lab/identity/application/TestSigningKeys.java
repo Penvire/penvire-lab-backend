@@ -22,7 +22,11 @@ final class TestSigningKeys {
 
   static KeyPair pair(SigningKeyAlgorithm algorithm) {
     try {
-      return KeyPairGenerator.getInstance(generatorName(algorithm)).generateKeyPair();
+      var generator = KeyPairGenerator.getInstance(generatorName(algorithm));
+      if (algorithm == SigningKeyAlgorithm.RS256) {
+        generator.initialize(2048);
+      }
+      return generator.generateKeyPair();
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException(e);
     }
