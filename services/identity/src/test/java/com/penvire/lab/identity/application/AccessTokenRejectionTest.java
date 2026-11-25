@@ -3,7 +3,7 @@ package com.penvire.lab.identity.application;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.penvire.lab.identity.adapter.out.signing.MLDsa65JwsSigner;
+import com.penvire.lab.identity.adapter.out.crypto.MLDsa65JwsSigner;
 import com.penvire.lab.identity.domain.jwt.AccessTokenClaims;
 import java.security.KeyPairGenerator;
 import java.security.PrivateKey;

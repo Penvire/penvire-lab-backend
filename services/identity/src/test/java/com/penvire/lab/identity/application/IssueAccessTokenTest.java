@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.penvire.lab.clock.MutableClock;
-import com.penvire.lab.identity.adapter.out.signing.MLDsa65JwsSigner;
+import com.penvire.lab.identity.adapter.out.crypto.MLDsa65JwsSigner;
 import com.penvire.lab.jwt.JwtType;
 import com.penvire.lab.jwt.JwtValidationPolicy;
 import com.penvire.lab.jwt.JwtValidator;

@@ -11,6 +11,8 @@ val identityContractFiles = configurations.resolvable("identityContractFiles") {
 dependencies {
     implementation(project(":libs:clock"))
     implementation(project(":libs:jwt"))
+    // Signing keys are stored in Identity's PostgreSQL database (ADR 0007).
+    implementation(project(":libs:persistence"))
     implementation("io.quarkus:quarkus-rest-jackson")
     testImplementation(testFixtures(project(":libs:clock")))
     testImplementation(libs.openapi.request.validator) {
