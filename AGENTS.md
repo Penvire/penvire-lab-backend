@@ -24,7 +24,7 @@ GLOSSARY.md             domain vocabulary
 
 Enter the environment with `devenv shell`, or run `direnv allow` once. It provides Java 25 and Gradle 9 (running on JDK 25). Always run tools through it. Quarkus Dev Services need Docker.
 
-Git hooks run automatically: a commit-msg hook rejects messages that are not Conventional Commits (the same rule as CI), and actionlint checks workflow files.
+Git hooks run automatically: a commit-msg hook rejects messages that are not Conventional Commits (the same rule as CI), actionlint checks workflow files, and a pre-commit hook runs `spotlessApply` when Java files are staged; if it reformats anything, the commit fails, so stage the formatted files and commit again.
 
 ### Local infrastructure
 
