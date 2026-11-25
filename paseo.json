@@ -1,4 +1,7 @@
 {
+  "worktree": {
+    "setup": "devenv shell"
+  },
   "metadataGeneration": {
     "branchName": {
       "instructions": "Prefix branches with feat/, fix/ or chore/."
