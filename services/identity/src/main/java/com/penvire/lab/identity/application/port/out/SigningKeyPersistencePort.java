@@ -33,4 +33,7 @@ public interface SigningKeyPersistencePort {
 
   /** Deletes keys past their publication. Returns how many were deleted. */
   int deleteExpiredAt(Instant now);
+
+  /** Holds the rotation lock until the transaction ends. */
+  void lockRotation();
 }

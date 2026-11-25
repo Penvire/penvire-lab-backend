@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.hibernate.Session;
 
 /**
  * Stores signing keys. Never writes a row without sealing it and never returns one whose MAC does
@@ -32,6 +33,9 @@ public class SigningKeyJpaPersistenceAdapter implements SigningKeyPersistencePor
   private final SigningKeyPersistenceMapper mapper;
   private final SigningKeyProtectorPort protector;
   private final Clock clock;
+
+  // Stable lock ID shared by all Identity instances using this database.
+  private static final long SIGNING_KEY_ROTATION_LOCK_ID = 0x50454E565F4A574BL;
 
   public SigningKeyJpaPersistenceAdapter(
       SigningKeyEntityRepository entities,
@@ -147,6 +151,20 @@ public class SigningKeyJpaPersistenceAdapter implements SigningKeyPersistencePor
   @Transactional(Transactional.TxType.MANDATORY)
   public int deleteExpiredAt(Instant now) {
     return (int) entities.delete("publishUntil <= ?1", now);
+  }
+
+  @Override
+  @Transactional(Transactional.TxType.MANDATORY)
+  public void lockRotation() {
+    entities
+        .getEntityManager()
+        .unwrap(Session.class)
+        .doWork(connection -> {
+          try (var statement = connection.prepareStatement("select pg_advisory_xact_lock(?)")) {
+            statement.setLong(1, SIGNING_KEY_ROTATION_LOCK_ID);
+            statement.execute();
+          }
+        });
   }
 
   private Optional<SigningKey> verified(SigningKeyEntity entity) {
