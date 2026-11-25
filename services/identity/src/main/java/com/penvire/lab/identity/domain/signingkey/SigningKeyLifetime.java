@@ -17,6 +17,14 @@ public record SigningKeyLifetime(
     @Nullable Instant revokedAt) {
 
   public SigningKeyLifetime {
+    publishFrom = normalize(publishFrom);
+    signFrom = normalize(signFrom);
+    signUntil = normalize(signUntil);
+    publishUntil = normalize(publishUntil);
+    if (revokedAt != null) {
+      revokedAt = normalize(revokedAt);
+    }
+
     if (signFrom.isBefore(publishFrom)) {
       throw new IllegalArgumentException("Signing key cannot sign before it is published");
     }
@@ -33,15 +41,6 @@ public record SigningKeyLifetime(
     if (revokedAt != null && !within(revokedAt, publishFrom, publishUntil)) {
       throw new IllegalArgumentException("Signing key can only be revoked while it is published.");
     }
-
-    publishFrom = normalize(publishFrom);
-    signFrom = normalize(signFrom);
-    signUntil = normalize(signUntil);
-    publishUntil = normalize(publishUntil);
-
-    if (revokedAt != null) {
-      revokedAt = normalize(revokedAt);
-    }
   }
 
   /** A lifetime that has never been revoked */
@@ -50,31 +49,31 @@ public record SigningKeyLifetime(
     this(publishFrom, signFrom, signUntil, publishUntil, null);
   }
 
-  /** Whether the key was revoked at or before {@code now}. */
-  public boolean isRevokedAt(Instant now) {
-    return revokedAt != null && !now.isBefore(revokedAt);
+  /** A recorded revocation is effective immediately; its timestamp is for audit. */
+  public boolean isRevoked() {
+    return revokedAt != null;
   }
 
   /** Whether the key's public part may appear in the JWKS at {@code now}. */
   public boolean isPublishedAt(Instant now) {
-    return within(now, publishFrom, publishUntil) && !isRevokedAt(now);
+    return within(now, publishFrom, publishUntil) && !isRevoked();
   }
 
   /** Whether the key signs new tokens at {@code now}. */
   public boolean signsAt(Instant now) {
-    return within(now, signFrom, signUntil) && !isRevokedAt(now);
+    return within(now, signFrom, signUntil) && !isRevoked();
   }
 
   /** Whether the key's private part may still exist at {@code now}. */
   public boolean holdsPrivateKeyAt(Instant now) {
-    return now.isBefore(signUntil) && !isRevokedAt(now);
+    return now.isBefore(signUntil) && !isRevoked();
   }
 
   public SigningKeyPhase phaseAt(Instant now) {
     if (!now.isBefore(publishUntil)) {
       return SigningKeyPhase.EXPIRED;
     }
-    if (isRevokedAt(now)) {
+    if (isRevoked()) {
       return SigningKeyPhase.REVOKED;
     }
     if (now.isBefore(signFrom)) {
@@ -101,6 +100,9 @@ public record SigningKeyLifetime(
     if (!signsAt(now)) {
       throw new IllegalStateException("Only a signing key that currently signs can be retired");
     }
+    if (!normalize(now).isAfter(signFrom)) {
+      throw new IllegalStateException("Retirement must leave a nonempty signing window");
+    }
     return new SigningKeyLifetime(publishFrom, signFrom, now, now.plus(retention));
   }
 
@@ -109,19 +111,22 @@ public record SigningKeyLifetime(
    * signed no longer verify. The instants stay, so the key shows as revoked until it would have
    * expired.
    *
-   * @throws IllegalStateException if the key is already revoked or has expired
+   * @throws IllegalStateException if the key is already revoked or outside its publication window
    */
   public SigningKeyLifetime revokeAt(Instant now) {
-    if (revokedAt != null) {
+    if (isRevoked()) {
       throw new IllegalStateException("The signing key is already revoked");
     }
-    if (!now.isBefore(publishUntil)) {
-      throw new IllegalStateException("An expired signing key cannot be revoked");
+    if (!within(now, publishFrom, publishUntil)) {
+      throw new IllegalStateException("Only a published signing key can be revoked");
     }
     return new SigningKeyLifetime(publishFrom, signFrom, signUntil, publishUntil, now);
   }
 
-  /** Limit Instant size to microseconds, discarding fractional microseconds to prevent database drift. */
+  /**
+   * Limit Instant size to microseconds, discarding fractional microseconds to prevent database
+   * drift.
+   */
   private static Instant normalize(Instant time) {
     return time.truncatedTo(ChronoUnit.MICROS);
   }

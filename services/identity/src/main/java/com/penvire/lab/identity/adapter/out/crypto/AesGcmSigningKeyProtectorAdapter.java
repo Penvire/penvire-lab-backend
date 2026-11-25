@@ -10,7 +10,6 @@ import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -19,7 +18,7 @@ import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
 
-/** AES-256-GCM for privaate keys and HMAC-SHA256 for rows, under KEKs from configuration. */
+/** AES-256-GCM for private keys and HMAC-SHA256 for rows, under KEKs from configuration. */
 @ApplicationScoped
 public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort {
 
@@ -27,6 +26,8 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
   private static final int NONCE_BYTES = 12;
   private static final int TAG_BITS = 128;
   private static final String MAC = "HmacSHA256";
+  private static final byte[] KEY_PAIR_CHALLENGE =
+      "penvire signing-key correspondence v1".getBytes(StandardCharsets.UTF_8);
 
   private final KeyEncryptionRing ring;
   private final SecureRandom random = new SecureRandom();
@@ -104,8 +105,6 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
   }
 
   private void requireCorrespondingKeys(SigningKey key, PrivateKey priv) {
-    String data = "Hello World!";
-    byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
     String alg = getSignatureAlgorithm(key.algorithm());
 
     byte[] signature;
@@ -113,7 +112,7 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
     try {
       Signature signer = Signature.getInstance(alg);
       signer.initSign(priv);
-      signer.update(dataBytes);
+      signer.update(KEY_PAIR_CHALLENGE);
       signature = signer.sign();
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException("Cannot sign data with key " + key.kid(), e);
@@ -122,9 +121,9 @@ public class AesGcmSigningKeyProtectorAdapter implements SigningKeyProtectorPort
     try {
       Signature verifier = Signature.getInstance(alg);
       verifier.initVerify(key.publicKey());
-      verifier.update(dataBytes);
-      if(!verifier.verify(signature)) {
-        throw new IllegalStateException("Cannot verify data with key " + key.kid());
+      verifier.update(KEY_PAIR_CHALLENGE);
+      if (!verifier.verify(signature)) {
+        throw new IllegalArgumentException("The private key does not belong to key " + key.kid());
       }
     } catch (GeneralSecurityException e) {
       throw new IllegalStateException("Cannot verify data with key " + key.kid(), e);

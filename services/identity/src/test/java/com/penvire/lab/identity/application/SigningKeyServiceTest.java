@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class SigningKeyServiceTest {
@@ -48,7 +49,12 @@ class SigningKeyServiceTest {
     }
 
     @Override
-    public void update(SigningKey key) {
+    public void retire(UUID id, Duration retention) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void revoke(UUID id) {
       throw new UnsupportedOperationException();
     }
 

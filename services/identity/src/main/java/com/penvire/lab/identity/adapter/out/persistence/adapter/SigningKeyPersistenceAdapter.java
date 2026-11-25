@@ -14,9 +14,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.LockModeType;
 import jakarta.transaction.Transactional;
 import java.security.PrivateKey;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Stores signing keys. Never writes a row without sealing it and never returns one whose MAC does
@@ -28,19 +31,25 @@ public class SigningKeyPersistenceAdapter implements SigningKeyPort {
   private final SigningKeyEntityRepository entities;
   private final SigningKeyPersistenceMapper mapper;
   private final SigningKeyProtectorPort protector;
+  private final Clock clock;
 
   public SigningKeyPersistenceAdapter(
       SigningKeyEntityRepository entities,
       SigningKeyPersistenceMapper mapper,
-      SigningKeyProtectorPort protector) {
+      SigningKeyProtectorPort protector,
+      Clock clock) {
     this.entities = entities;
     this.mapper = mapper;
     this.protector = protector;
+    this.clock = clock;
   }
 
   @Override
   @Transactional(Transactional.TxType.MANDATORY)
   public void insert(SigningKey key, PrivateKey privateKey) {
+    if (key.lifetime().isRevoked()) {
+      throw new IllegalArgumentException("Cannot insert a revoked signing key " + key.kid());
+    }
     var sealed = protector.seal(key, privateKey);
     var entity = mapper.toEntity(key);
     entity.setKekId(sealed.kekId());
@@ -52,30 +61,48 @@ public class SigningKeyPersistenceAdapter implements SigningKeyPort {
 
   @Override
   @Transactional(Transactional.TxType.MANDATORY)
-  public void update(SigningKey key) {
+  public void retire(UUID id, Duration retention) {
+    var entity = lock(id);
+    var retired = requireIntact(entity).retireAt(clock.instant(), retention);
+    storeLifetime(entity, retired);
+  }
+
+  @Override
+  @Transactional(Transactional.TxType.MANDATORY)
+  public void revoke(UUID id) {
+    var entity = lock(id);
+    var revoked = requireIntact(entity).revokeAt(clock.instant());
+    entity.setEncryptedPrivateKey(null);
+    entity.setPrivateKeyNonce(null);
+    storeLifetime(entity, revoked);
+  }
+
+  private SigningKeyEntity lock(UUID id) {
     var entity =
         entities
-            .findByIdOptional(key.id(), LockModeType.PESSIMISTIC_WRITE)
-            .filter(stored -> verified(stored).isPresent())
-            .orElseThrow(() -> new IllegalStateException("No intact signing key " + key.kid()));
+            .findByIdOptional(id, LockModeType.PESSIMISTIC_WRITE)
+            .orElseThrow(() -> new IllegalStateException("No signing key " + id));
+    // Reload under the lock in case an earlier read cached the entity in this transaction.
+    entities.flush();
+    entities.getEntityManager().refresh(entity);
+    return entity;
+  }
+
+  private SigningKey requireIntact(SigningKeyEntity entity) {
+    return verified(entity)
+        .orElseThrow(() -> new IllegalStateException("No intact signing key " + entity.getId()));
+  }
+
+  private void storeLifetime(SigningKeyEntity entity, SigningKey key) {
     mapper.updateEntity(key, entity);
-
-    if (key.lifetime().revokedAt() != null) {
-      entity.setEncryptedPrivateKey(null);
-      entity.setPrivateKeyNonce(null);
-    }
-
-    // The MAC covers the row as stored, not the key passed in.
-    entity.setRowMac(protector.mac(mapper.toDomain(entity), entity.getKekId()));
+    entity.setRowMac(protector.mac(key, entity.getKekId()));
   }
 
   @Override
   @Transactional(Transactional.TxType.MANDATORY)
   public List<SigningKey> findPublishedAt(Instant now) {
     return entities
-        .find(
-            "publishFrom <= ?1 and publishUntil > ?1 and (revokedAt is null or revokedAt > ?1)",
-            now)
+        .find("publishFrom <= ?1 and publishUntil > ?1 and revokedAt is null", now)
         .stream()
         .flatMap(entity -> verified(entity).stream())
         .filter(key -> key.isPublishedAt(now))
@@ -89,7 +116,7 @@ public class SigningKeyPersistenceAdapter implements SigningKeyPort {
         entities
             .find(
                 "signingKeyAlgorithm = ?1 and signFrom <= ?2 and signUntil > ?2"
-                    + " and (revokedAt is null or revokedAt > ?2)"
+                    + " and revokedAt is null"
                     + " and encryptedPrivateKey is not null",
                 algorithm,
                 now)
@@ -112,7 +139,7 @@ public class SigningKeyPersistenceAdapter implements SigningKeyPort {
     return entities.update(
         "encryptedPrivateKey = null, privateKeyNonce = null"
             + " where encryptedPrivateKey is not null"
-            + " and (signUntil <= ?1 or revokedAt <= ?1)",
+            + " and (signUntil <= ?1 or revokedAt is not null)",
         now);
   }
 

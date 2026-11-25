@@ -63,6 +63,13 @@ class SigningKeyLifetimeTest {
   }
 
   @Test
+  void rejectsSigningWindowThatCollapsesAtDatabasePrecision() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new SigningKeyLifetime(at(0), at(1).plusNanos(1), at(1).plusNanos(999), at(722)));
+  }
+
+  @Test
   void isNotRevokedWhenCreatedWithoutARevocation() {
     assertNull(LIFETIME.revokedAt());
   }
@@ -105,12 +112,11 @@ class SigningKeyLifetimeTest {
   // Revocation ends publishing, signing and the private key at once
 
   @Test
-  void isRevokedFromItsRevocationOn() {
+  void recordsRevocationAsAnIrreversibleState() {
     var revoked = revokedAt(at(10));
 
-    assertFalse(revoked.isRevokedAt(at(10).minusNanos(1)));
-    assertTrue(revoked.isRevokedAt(at(10)));
-    assertFalse(LIFETIME.isRevokedAt(at(10)));
+    assertTrue(revoked.isRevoked());
+    assertFalse(LIFETIME.isRevoked());
   }
 
   @Test
@@ -118,8 +124,8 @@ class SigningKeyLifetimeTest {
     var revoked = revokedAt(at(10));
 
     assertAll(
-        () -> assertTrue(revoked.isPublishedAt(at(10).minusNanos(1))),
-        () -> assertTrue(revoked.signsAt(at(10).minusNanos(1))),
+        () -> assertFalse(revoked.isPublishedAt(at(10).minusNanos(1))),
+        () -> assertFalse(revoked.signsAt(at(10).minusNanos(1))),
         () -> assertFalse(revoked.isPublishedAt(at(10))),
         () -> assertFalse(revoked.signsAt(at(10))),
         () -> assertFalse(revoked.holdsPrivateKeyAt(at(10))));
@@ -139,11 +145,11 @@ class SigningKeyLifetimeTest {
   }
 
   @Test
-  void isRevokedFromItsRevocationUntilItWouldHaveExpired() {
+  void recordedRevocationTakesPrecedenceUntilTheKeyWouldHaveExpired() {
     var revoked = revokedAt(at(10));
 
     assertAll(
-        () -> assertEquals(SigningKeyPhase.SIGNING, revoked.phaseAt(at(10).minusNanos(1))),
+        () -> assertEquals(SigningKeyPhase.REVOKED, revoked.phaseAt(at(10).minusNanos(1))),
         () -> assertEquals(SigningKeyPhase.REVOKED, revoked.phaseAt(at(10))),
         () -> assertEquals(SigningKeyPhase.REVOKED, revoked.phaseAt(at(722).minusNanos(1))),
         () -> assertEquals(SigningKeyPhase.EXPIRED, revoked.phaseAt(at(722))));
@@ -161,6 +167,12 @@ class SigningKeyLifetimeTest {
   @Test
   void cannotRetireALifetimeThatDoesNotSignYet() {
     assertThrows(IllegalStateException.class, () -> LIFETIME.retireAt(at(0), RETENTION));
+  }
+
+  @Test
+  void cannotRetireWithinTheFirstMicrosecondOfSigning() {
+    assertThrows(
+        IllegalStateException.class, () -> LIFETIME.retireAt(at(1).plusNanos(999), RETENTION));
   }
 
   @Test
