@@ -16,6 +16,8 @@ public record SigningKeyLifetime(
     Instant publishUntil,
     @Nullable Instant revokedAt) {
 
+  private static final Duration SKEW = Duration.ofSeconds(30);
+
   public SigningKeyLifetime {
     publishFrom = normalize(publishFrom);
     signFrom = normalize(signFrom);
@@ -47,6 +49,21 @@ public record SigningKeyLifetime(
   public SigningKeyLifetime(
       Instant publishFrom, Instant signFrom, Instant signUntil, Instant publishUntil) {
     this(publishFrom, signFrom, signUntil, publishUntil, null);
+  }
+
+  /**
+   * A key that signs for {@code signingPeriod} from {@code signFrom} and stays published until the
+   * last token it signs has expired (ADR 0007, ADR 0009).
+   */
+  public static SigningKeyLifetime starting(
+      Instant publishFrom,
+      Instant signFrom,
+      Duration signingPeriod,
+      Duration longestTokenLifetime) {
+
+    var signUntil = signFrom.plus(signingPeriod);
+    return new SigningKeyLifetime(
+        publishFrom, signFrom, signUntil, signUntil.plus(longestTokenLifetime).plus(SKEW));
   }
 
   /** A recorded revocation is effective immediately; its timestamp is for audit. */

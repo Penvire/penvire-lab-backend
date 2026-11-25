@@ -53,6 +53,11 @@ final class TestSigningKeys {
   private record OnlySigner(ActiveSigningKey signer) implements SigningKeyPersistencePort {
 
     @Override
+    public void lockRotation() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Optional<ActiveSigningKey> findSignerAt(SigningKeyAlgorithm algorithm, Instant now) {
       var key = signer.key();
       return key.algorithm() == algorithm && key.signsAt(now)
