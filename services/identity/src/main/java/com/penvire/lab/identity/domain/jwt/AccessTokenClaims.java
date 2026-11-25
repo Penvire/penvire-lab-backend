@@ -1,5 +1,7 @@
 package com.penvire.lab.identity.domain.jwt;
 
+import static com.penvire.lab.identity.domain.jwt.ClaimRules.requireIdentifier;
+
 import java.time.Instant;
 
 public record AccessTokenClaims(
@@ -10,8 +12,8 @@ public record AccessTokenClaims(
     String tokenId,
     Instant issuedAt,
     Instant notBefore,
-    Instant expiresAt) {
-  private static final int MAX_IDENTIFIER_LENGTH = 4_096;
+    Instant expiresAt)
+    implements TokenClaims {
 
   public AccessTokenClaims {
     requireIdentifier("iss", issuer);
@@ -23,12 +25,6 @@ public record AccessTokenClaims(
     if (!expiresAt.isAfter(issuedAt) || !expiresAt.isAfter(notBefore)) {
       throw new IllegalArgumentException(
           "Access-token expiration must be after issued-at and not-before");
-    }
-  }
-
-  private static void requireIdentifier(String name, String value) {
-    if (value.isBlank() || value.length() > MAX_IDENTIFIER_LENGTH) {
-      throw new IllegalArgumentException("Invalid access-token claim: " + name);
     }
   }
 }

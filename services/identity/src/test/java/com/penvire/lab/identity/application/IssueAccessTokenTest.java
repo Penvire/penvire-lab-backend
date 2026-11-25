@@ -7,7 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.penvire.lab.clock.MutableClock;
-import com.penvire.lab.identity.adapter.out.crypto.MLDsa65JwsSigner;
+import com.penvire.lab.identity.adapter.out.crypto.AccessTokenSignerAdapter;
+import com.penvire.lab.identity.adapter.out.crypto.Signer;
+import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.jwt.JwtType;
 import com.penvire.lab.jwt.JwtValidationPolicy;
 import com.penvire.lab.jwt.JwtValidator;
@@ -16,7 +18,6 @@ import com.penvire.lab.jwt.jws.MLDSA65JwsVerifier;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.time.Clock;
 import java.time.Duration;
@@ -38,7 +39,6 @@ class IssueAccessTokenTest {
   private static final String SUBJECT = "test-user:alice";
   private static final String CLIENT_ID = "test-client";
   private static final String AUDIENCE = "evidence-api";
-  private static final String KEY_ID = "test-key-1";
   private static final String ALGORITHM = "ML-DSA-65";
   private static final Instant NOW = Instant.parse("2030-01-01T00:00:00Z");
   private static final Clock CLOCK = Clock.fixed(NOW, ZoneOffset.UTC);
@@ -129,16 +129,22 @@ class IssueAccessTokenTest {
 
   /** The use case and the validator share one clock, so moving it ages the issued token. */
   private static Fixture fixture(Duration lifetime, Clock clock) throws Exception {
-    var keys = KeyPairGenerator.getInstance(ALGORITHM).generateKeyPair();
-    var signer = new MLDsa65JwsSigner(KEY_ID, keys.getPrivate());
-    var useCase = new TokenService(new TestJwtConfig(lifetime), ISSUER, clock, signer);
+    var keys = TestSigningKeys.pair(SigningKeyAlgorithm.ML_DSA_65);
+    var signingKey = TestSigningKeys.active(SigningKeyAlgorithm.ML_DSA_65, keys, NOW);
+    var useCase =
+        new TokenService(
+            new TestJwtConfig(lifetime),
+            new TestIdentityConfig(ISSUER),
+            clock,
+            new AccessTokenSignerAdapter(new Signer()),
+            TestSigningKeys.onlySigner(signingKey));
     var validator =
         new JwtValidator(
             Map.of(ALGORITHM, new MLDSA65JwsVerifier()),
             clock,
             (issuer, keyId, algorithm, type) -> {
               assertEquals(ISSUER, issuer);
-              assertEquals(KEY_ID, keyId);
+              assertEquals(signingKey.key().kid(), keyId);
               assertEquals(ALGORITHM, algorithm);
               assertEquals(JwtType.ACCESS, type);
               return keys.getPublic();

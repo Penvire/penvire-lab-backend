@@ -32,7 +32,7 @@ Identity signs tokens with ML-DSA-65 and, where a client or API requires it, RS2
 
 ## Considered options
 
-- **Private keys in a KMS, HSM or Vault Transit**, signing remotely so they never enter the JVM. It is the strongest option, but `AccessTokenSigner` would call an external service instead of signing with a supplied key, and ML-DSA-65 support is not available everywhere. Worth reconsidering for the product, not needed for the lab.
+- **Private keys in a KMS, HSM or Vault Transit**, signing remotely so they never enter the JVM. It is the strongest option, but `TokenSignerPort` would call an external service instead of signing with a supplied key, and ML-DSA-65 support is not available everywhere. Worth reconsidering for the product, not needed for the lab.
 - **Private keys unencrypted**, relying on database access control or disk encryption. Rejected: every dump, backup or SQL read would expose them.
 - **Encryption in the database with pgcrypto.** Rejected: the KEK would travel in SQL statements and could appear in logs and statement statistics.
 - **A PKCS#12 keystore file beside the application.** Rejected: its password sits in the same configuration, and several instances need a shared file.

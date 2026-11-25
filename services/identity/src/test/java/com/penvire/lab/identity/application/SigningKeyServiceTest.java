@@ -3,7 +3,7 @@ package com.penvire.lab.identity.application;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.penvire.lab.clock.MutableClock;
-import com.penvire.lab.identity.application.port.out.SigningKeyPort;
+import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
 import com.penvire.lab.identity.domain.signingkey.ActiveSigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
@@ -34,7 +34,7 @@ class SigningKeyServiceTest {
   }
 
   /** Records when the published keys were asked for; every other operation is not expected. */
-  private static final class RecordingSigningKeys implements SigningKeyPort {
+  private static final class RecordingSigningKeys implements SigningKeyPersistencePort {
     private final List<Instant> askedAt = new ArrayList<>();
 
     @Override

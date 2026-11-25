@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntityRepository;
-import com.penvire.lab.identity.application.port.out.SigningKeyPort;
+import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyLifetime;
@@ -24,8 +24,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class SigningKeyPersistenceAdapterTest {
-  @Inject SigningKeyPort keys;
+class SigningKeyJpaPersistenceAdapterTest {
+  @Inject SigningKeyPersistencePort keys;
   @Inject SigningKeyEntityRepository entities;
   @Inject Clock clock;
 

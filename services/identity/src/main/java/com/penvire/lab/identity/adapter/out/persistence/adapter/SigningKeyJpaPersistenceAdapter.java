@@ -4,7 +4,7 @@ import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntity;
 import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntityRepository;
 import com.penvire.lab.identity.adapter.out.persistence.mapper.SigningKeyPersistenceMapper;
 import com.penvire.lab.identity.application.port.out.SealedPrivateKey;
-import com.penvire.lab.identity.application.port.out.SigningKeyPort;
+import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
 import com.penvire.lab.identity.application.port.out.SigningKeyProtectorPort;
 import com.penvire.lab.identity.domain.signingkey.ActiveSigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
@@ -26,14 +26,14 @@ import java.util.UUID;
  * not match. Callers own the transaction.
  */
 @ApplicationScoped
-public class SigningKeyPersistenceAdapter implements SigningKeyPort {
+public class SigningKeyJpaPersistenceAdapter implements SigningKeyPersistencePort {
 
   private final SigningKeyEntityRepository entities;
   private final SigningKeyPersistenceMapper mapper;
   private final SigningKeyProtectorPort protector;
   private final Clock clock;
 
-  public SigningKeyPersistenceAdapter(
+  public SigningKeyJpaPersistenceAdapter(
       SigningKeyEntityRepository entities,
       SigningKeyPersistenceMapper mapper,
       SigningKeyProtectorPort protector,
