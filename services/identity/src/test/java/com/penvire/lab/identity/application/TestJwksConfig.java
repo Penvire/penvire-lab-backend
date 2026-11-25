@@ -7,10 +7,18 @@ import java.util.Set;
 
 /** ADR 0007's rotation: 30-day signing periods, the next key two days ahead. */
 record TestJwksConfig(
-    Set<SigningKeyAlgorithm> algorithms, Duration signingPeriod, Duration leadTime)
+    Set<SigningKeyAlgorithm> algorithms,
+    Duration signingPeriod,
+    Duration leadTime,
+    Duration rotationInterval,
+    Duration rotationDelay)
     implements JwksConfig {
 
   TestJwksConfig(Set<SigningKeyAlgorithm> algorithms) {
     this(algorithms, Duration.ofDays(30), Duration.ofDays(2));
+  }
+
+  TestJwksConfig(Set<SigningKeyAlgorithm> algorithms, Duration signingPeriod, Duration leadTime) {
+    this(algorithms, signingPeriod, leadTime, Duration.ofHours(24), Duration.ofHours(24));
   }
 }

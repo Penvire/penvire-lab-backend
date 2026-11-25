@@ -14,6 +14,8 @@ dependencies {
     // Signing keys are stored in Identity's PostgreSQL database (ADR 0007).
     implementation(project(":libs:persistence"))
     implementation("io.quarkus:quarkus-rest-jackson")
+    implementation("io.quarkus:quarkus-scheduler")
+
     testImplementation(testFixtures(project(":libs:clock")))
     testImplementation(libs.openapi.request.validator) {
         // Identity only validates OpenAPI 3.1; Swagger 2 conversion pulls in json-patch.

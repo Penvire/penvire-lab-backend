@@ -32,6 +32,7 @@ val generateOpenApiServer = tasks.register<GenerateTask>("generateOpenApiServer"
         "useJspecify" to "true",
         "useBeanValidation" to "false",
         "openApiNullable" to "false",
+        "additionalModelTypeAnnotations" to "@com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)",
         "hideGenerationTimestamp" to "true",
         "sourceFolder" to "src/gen/java",
     )
