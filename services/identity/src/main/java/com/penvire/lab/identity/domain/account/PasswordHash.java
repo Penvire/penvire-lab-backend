@@ -5,10 +5,6 @@ public record PasswordHash(String value) {
     if (value.isBlank()) {
       throw new IllegalArgumentException("Invalid password hash");
     }
-
-    if (value.length() < 8) {
-      throw new IllegalArgumentException("Password hash must be at least 8 characters long");
-    }
   }
 
   @Override

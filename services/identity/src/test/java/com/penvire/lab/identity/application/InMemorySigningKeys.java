@@ -1,7 +1,7 @@
 package com.penvire.lab.identity.application;
 
 import com.penvire.lab.clock.MutableClock;
-import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
+import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyPersistencePort;
 import com.penvire.lab.identity.domain.signingkey.ActiveSigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;

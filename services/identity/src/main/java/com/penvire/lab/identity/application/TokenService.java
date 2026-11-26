@@ -1,8 +1,8 @@
 package com.penvire.lab.identity.application;
 
-import com.penvire.lab.identity.application.port.in.IssueAccessTokenUseCase;
-import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
-import com.penvire.lab.identity.application.port.out.TokenSignerPort;
+import com.penvire.lab.identity.application.port.in.jwt.IssueAccessTokenUseCase;
+import com.penvire.lab.identity.application.port.out.jwt.TokenSignerPort;
+import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyPersistencePort;
 import com.penvire.lab.identity.config.IdentityConfig;
 import com.penvire.lab.identity.config.JwtConfig;
 import com.penvire.lab.identity.domain.jwt.AccessTokenClaims;

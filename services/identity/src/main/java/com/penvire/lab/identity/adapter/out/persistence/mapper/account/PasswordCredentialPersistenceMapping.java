@@ -17,6 +17,7 @@ public interface PasswordCredentialPersistenceMapping
   PasswordCredentialEntity toEntity(PasswordCredential domain);
 
   @Override
+  @Mapping(target = "revoke", ignore = true)
   PasswordCredential toDomain(PasswordCredentialEntity entity);
 
   @Override

@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":libs:persistence"))
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-scheduler")
+    implementation(libs.bcprov)
 
     testImplementation(testFixtures(project(":libs:clock")))
     testImplementation(libs.openapi.request.validator) {

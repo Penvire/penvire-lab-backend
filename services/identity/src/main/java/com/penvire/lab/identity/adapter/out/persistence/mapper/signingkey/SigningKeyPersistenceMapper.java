@@ -41,6 +41,7 @@ public interface SigningKeyPersistenceMapper extends EntityMapper<SigningKey, Si
       target = "publicKey",
       expression = "java(decodePublicKey(entity.getSigningKeyAlgorithm(), entity.getPublicKey()))")
   @Mapping(target = "lifetime", source = "entity")
+  @Mapping(target = "revokeAt", ignore = true)
   SigningKey toDomain(SigningKeyEntity entity);
 
   /** Only what retiring and revoking change; everything else is fixed at insert. */
@@ -52,6 +53,7 @@ public interface SigningKeyPersistenceMapper extends EntityMapper<SigningKey, Si
   void updateEntity(SigningKey domain, @MappingTarget SigningKeyEntity entity);
 
   /** The lifetime's components have the same names as the entity's columns. */
+  @Mapping(target = "revokeAt", ignore = true)
   SigningKeyLifetime toLifetime(SigningKeyEntity entity);
 
   default byte[] encodePublicKey(PublicKey publicKey) {

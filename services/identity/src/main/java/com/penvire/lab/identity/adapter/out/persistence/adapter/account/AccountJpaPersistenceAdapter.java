@@ -3,7 +3,7 @@ package com.penvire.lab.identity.adapter.out.persistence.adapter.account;
 import com.penvire.lab.identity.adapter.out.persistence.entity.account.AccountEntity;
 import com.penvire.lab.identity.adapter.out.persistence.entity.account.AccountEntityRepository;
 import com.penvire.lab.identity.adapter.out.persistence.mapper.account.AccountPersistenceMapper;
-import com.penvire.lab.identity.application.port.out.AccountPersistencePort;
+import com.penvire.lab.identity.application.port.out.account.AccountPersistencePort;
 import com.penvire.lab.identity.domain.account.Account;
 import com.penvire.lab.identity.domain.account.Email;
 import com.penvire.lab.identity.domain.account.Username;

@@ -3,13 +3,14 @@ package com.penvire.lab.identity.adapter.out.persistence.adapter.account;
 import com.penvire.lab.identity.adapter.out.persistence.entity.account.PasswordCredentialEntity;
 import com.penvire.lab.identity.adapter.out.persistence.entity.account.PasswordCredentialEntityRepository;
 import com.penvire.lab.identity.adapter.out.persistence.mapper.account.PasswordCredentialPersistenceMapping;
-import com.penvire.lab.identity.application.port.out.PasswordCredentialPersistencePort;
+import com.penvire.lab.identity.application.port.out.account.PasswordCredentialPersistencePort;
 import com.penvire.lab.identity.domain.account.PasswordCredential;
 import com.penvire.lab.persistence.DomainRepository;
 import com.penvire.lab.persistence.EntityMapper;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,6 +47,21 @@ public class PasswordCredentialJpaPersistenceAdapter
         .stream()
         .map(mapper::toDomain)
         .toList();
+  }
+
+  @Override
+  @Transactional(Transactional.TxType.MANDATORY)
+  public void changePassword(UUID accountId, PasswordCredential newCredential, Instant now) {
+    Optional<PasswordCredential> credential = findActiveByAccountId(accountId);
+    if (credential.isEmpty()) {
+      throw new IllegalArgumentException("No active password credential found for account");
+    }
+
+    update(credential.get().revoke(now));
+
+    entities.flush();
+
+    insert(newCredential);
   }
 
   @Override

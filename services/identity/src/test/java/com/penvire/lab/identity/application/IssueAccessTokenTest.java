@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.penvire.lab.clock.MutableClock;
-import com.penvire.lab.identity.adapter.out.crypto.AccessTokenSignerAdapter;
-import com.penvire.lab.identity.adapter.out.crypto.Signer;
+import com.penvire.lab.identity.adapter.out.crypto.jwt.AccessTokenSignerAdapter;
+import com.penvire.lab.identity.adapter.out.crypto.jwt.Signer;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.jwt.JwtType;
 import com.penvire.lab.jwt.JwtValidationPolicy;

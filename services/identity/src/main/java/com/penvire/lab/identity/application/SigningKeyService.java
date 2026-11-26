@@ -1,10 +1,10 @@
 package com.penvire.lab.identity.application;
 
-import com.penvire.lab.identity.application.port.in.GetJwksSetUseCase;
-import com.penvire.lab.identity.application.port.in.RevokeSigningKeyUseCase;
-import com.penvire.lab.identity.application.port.in.RotateSigningKeyUseCase;
-import com.penvire.lab.identity.application.port.out.SigningKeyGeneratorPort;
-import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
+import com.penvire.lab.identity.application.port.in.signingkey.GetJwksSetUseCase;
+import com.penvire.lab.identity.application.port.in.signingkey.RevokeSigningKeyUseCase;
+import com.penvire.lab.identity.application.port.in.signingkey.RotateSigningKeyUseCase;
+import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyGeneratorPort;
+import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyPersistencePort;
 import com.penvire.lab.identity.config.JwksConfig;
 import com.penvire.lab.identity.config.JwtConfig;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;

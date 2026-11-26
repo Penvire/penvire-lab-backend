@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.penvire.lab.identity.adapter.out.persistence.entity.signingkey.SigningKeyEntityRepository;
-import com.penvire.lab.identity.application.port.in.IssueAccessTokenUseCase;
-import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
+import com.penvire.lab.identity.application.port.in.jwt.IssueAccessTokenUseCase;
+import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyPersistencePort;
 import com.penvire.lab.identity.config.IdentityConfig;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;

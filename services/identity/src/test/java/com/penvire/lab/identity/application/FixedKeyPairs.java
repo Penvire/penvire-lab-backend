@@ -1,6 +1,6 @@
 package com.penvire.lab.identity.application;
 
-import com.penvire.lab.identity.application.port.out.SigningKeyGeneratorPort;
+import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyGeneratorPort;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;

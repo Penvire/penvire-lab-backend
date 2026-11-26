@@ -1,6 +1,6 @@
 package com.penvire.lab.identity.adapter.in.scheduler;
 
-import com.penvire.lab.identity.application.port.in.RotateSigningKeyUseCase;
+import com.penvire.lab.identity.application.port.in.signingkey.RotateSigningKeyUseCase;
 import io.quarkus.runtime.Startup;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
