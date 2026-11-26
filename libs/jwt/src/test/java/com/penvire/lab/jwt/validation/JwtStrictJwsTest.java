@@ -1,4 +1,4 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.validation;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;

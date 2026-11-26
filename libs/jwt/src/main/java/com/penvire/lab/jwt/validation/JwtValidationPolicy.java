@@ -1,4 +1,4 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.validation;
 
 import java.time.Duration;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.jws;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Objects;
@@ -18,19 +18,19 @@ public final class ParsedJws {
     this.signature = Objects.requireNonNull(signature, "signature").clone();
   }
 
-  JsonNode header() {
+  public JsonNode header() {
     return header.deepCopy();
   }
 
-  byte[] payload() {
+  public byte[] payload() {
     return payload.clone();
   }
 
-  byte[] signingInput() {
+  public byte[] signingInput() {
     return signingInput.clone();
   }
 
-  byte[] signature() {
+  public byte[] signature() {
     return signature.clone();
   }
 }

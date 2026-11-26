@@ -27,6 +27,7 @@ include(":libs:problem")
 include(":libs:jwt")
 include(":libs:event")
 include(":libs:audit")
+include(":libs:security")
 
 // Services
 include(":services:identity")

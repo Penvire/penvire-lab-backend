@@ -1,8 +1,10 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.jws;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.penvire.lab.jwt.validation.JwtTestTokens;
+import com.penvire.lab.jwt.validation.JwtType;
 import org.junit.jupiter.api.Test;
 
 class ParsedJwsTest {
