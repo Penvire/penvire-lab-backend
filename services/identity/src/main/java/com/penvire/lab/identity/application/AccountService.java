@@ -1,5 +1,7 @@
 package com.penvire.lab.identity.application;
 
+import com.penvire.lab.audit.AuditScope;
+import com.penvire.lab.audit.Audited;
 import com.penvire.lab.identity.application.port.in.account.AuthenticateAccountUseCase;
 import com.penvire.lab.identity.application.port.in.account.ChangeAccountStatusUseCase;
 import com.penvire.lab.identity.application.port.in.account.ChangePasswordUseCase;
@@ -39,6 +41,7 @@ public class AccountService
   private final PasswordCredentialPersistencePort passwordCredentials;
   private final PasswordHasherPort passwordHasher;
   private final Clock clock;
+  private final AuditScope audit;
 
   private PasswordHash dummyHash;
 
@@ -47,12 +50,14 @@ public class AccountService
       AccountPersistencePort accounts,
       PasswordCredentialPersistencePort passwordCredentials,
       PasswordHasherPort passwordHasher,
-      Clock clock) {
+      Clock clock,
+      AuditScope audit) {
     this.idGenerator = idGenerator;
     this.accounts = accounts;
     this.passwordCredentials = passwordCredentials;
     this.passwordHasher = passwordHasher;
     this.clock = clock;
+    this.audit = audit;
 
     this.dummyHash = passwordHasher.hash("DummyHash");
   }
@@ -85,6 +90,7 @@ public class AccountService
 
   @Override
   @Transactional
+  @Audited(value = "identity.account.change-password")
   public void changePassword(UUID accountId, String currentPassword, String newPassword) {
     Instant now = clock.instant();
     validatePassword(newPassword);
@@ -123,10 +129,16 @@ public class AccountService
         PasswordCredential.active(
             idGenerator.next(), accountId, passwordHasher.hash(newPassword), now);
     passwordCredentials.changePassword(accountId, newCredential, now);
+
+    audit.target(accountId.toString());
   }
 
   @Override
   @Transactional
+  @Audited(
+      value = "identity.account.create",
+      state = Account.class,
+      pathOnly = {"email", "username"})
   public Account create(Email email, Username username, String rawPassword) {
     Instant now = clock.instant();
 
@@ -147,6 +159,9 @@ public class AccountService
     account = accounts.insert(account);
     passwordCredentials.insert(credential);
 
+    audit.target(account.id().toString());
+    audit.state(null, account);
+
     return account;
   }
 
@@ -158,27 +173,42 @@ public class AccountService
 
   @Override
   @Transactional
+  @Audited(
+      value = "identity.account.enable",
+      state = Account.class,
+      pathOnly = {"email", "username"})
   public Account enable(UUID accountId) {
-    Account account =
+    Account before =
         accounts
             .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException(accountId.toString()))
-            .enable();
+            .orElseThrow(() -> new IllegalArgumentException(accountId.toString()));
 
+    Account account = before.enable();
     account = accounts.update(account);
+
+    audit.target(account.id().toString());
+    audit.state(before, account);
+
     return account;
   }
 
   @Override
   @Transactional
+  @Audited(
+      value = "identity.account.disable",
+      state = Account.class,
+      pathOnly = {"email", "username"})
   public Account disable(UUID accountId) {
-    Account account =
+    Account before =
         accounts
             .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException(accountId.toString()))
-            .disable();
+            .orElseThrow(() -> new IllegalArgumentException(accountId.toString()));
 
+    Account account = before.disable();
     account = accounts.update(account);
+
+    audit.target(account.id().toString());
+    audit.state(before, account);
 
     return account;
   }

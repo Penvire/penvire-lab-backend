@@ -3,6 +3,7 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     id("penvire.quarkus-library")
     id("io.quarkus") version libs.versions.quarkus.get()
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -14,6 +15,8 @@ dependencies {
     implementation("io.quarkus:quarkus-vertx-http")
     // Changed values are recorded as JSON text, with the service's own ObjectMapper settings.
     implementation("io.quarkus:quarkus-jackson")
+
+    testFixturesApi(libs.jspecify)
 
     testImplementation("io.quarkus:quarkus-test-security")
     testImplementation("io.quarkus:quarkus-rest")

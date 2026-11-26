@@ -11,6 +11,8 @@ val identityContractFiles = configurations.resolvable("identityContractFiles") {
 dependencies {
     implementation(project(":libs:clock"))
     implementation(project(":libs:jwt"))
+    implementation(project(":libs:audit"))
+    implementation("dev.penvire.lab:identity-events:${libs.versions.identity.events.get()}")
     // Signing keys are stored in Identity's PostgreSQL database (ADR 0007).
     implementation(project(":libs:persistence"))
     implementation("io.quarkus:quarkus-rest-jackson")
@@ -18,6 +20,7 @@ dependencies {
     implementation(libs.bcprov)
 
     testImplementation(testFixtures(project(":libs:clock")))
+    testImplementation(testFixtures(project(":libs:audit")))
     testImplementation(libs.openapi.request.validator) {
         // Identity only validates OpenAPI 3.1; Swagger 2 conversion pulls in json-patch.
         exclude(group = "io.swagger.parser.v3", module = "swagger-parser-v2-converter")

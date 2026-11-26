@@ -3,6 +3,8 @@ package com.penvire.lab.identity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,6 +20,9 @@ import com.penvire.lab.identity.domain.account.Account;
 import com.penvire.lab.identity.domain.account.Email;
 import com.penvire.lab.identity.domain.account.LoginIdentifier;
 import com.penvire.lab.identity.domain.account.Username;
+import dev.penvire.lab.identity.events.v1.AuditChange;
+import dev.penvire.lab.identity.events.v1.AuditOutcome;
+import dev.penvire.lab.identity.events.v1.AuditRecorded;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;
@@ -28,8 +33,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * End-to-end account lifecycle through Quarkus CDI, transactions, real Argon2id hashing and
- * PostgreSQL constraints.
+ * End-to-end account lifecycle through Quarkus CDI, transactions, real Argon2id hashing, audit
+ * outbox recording, and PostgreSQL constraints.
  */
 @QuarkusTest
 class AccountEndToEndTest {
@@ -46,10 +51,12 @@ class AccountEndToEndTest {
   @Inject ChangeAccountStatusUseCase changeAccountStatus;
   @Inject AccountEntityRepository accountEntities;
   @Inject PasswordCredentialEntityRepository credentialEntities;
+  @Inject RecordedIdentityAudits audits;
 
   @BeforeEach
   @AfterEach
   void emptyTables() {
+    audits.clear();
     QuarkusTransaction.requiringNew()
         .run(() -> {
           credentialEntities.deleteAll();
@@ -58,7 +65,7 @@ class AccountEndToEndTest {
   }
 
   @Test
-  void createsAccountStoresArgon2idHashAndAuthenticates() {
+  void createsAccountStoresArgon2idHashAuthenticatesAndRecordsAudit() {
     Account created = createAccount.create(ALICE_EMAIL, ALICE_USERNAME, PASSWORD_1);
 
     assertEquals(Optional.of(created), getAccount.getById(created.id()));
@@ -79,6 +86,22 @@ class AccountEndToEndTest {
         authenticateAccount
             .authenticate(LoginIdentifier.parse("alice"), "wrong-password-123")
             .isEmpty());
+
+    List<RecordedIdentityAudits.Row> createdAudits = audits.ofAction("identity.account.create");
+    assertEquals(1, createdAudits.size());
+    AuditRecorded event = createdAudits.getFirst().event();
+    assertEquals(AuditOutcome.SUCCESS, event.getOutcome());
+    assertEquals("account", event.getTargetType().toString());
+    assertEquals(created.id().toString(), event.getTargetId().toString());
+
+    AuditChange enabledChange = requireChange(event, "enabled");
+    assertEquals("true", enabledChange.getNewValue().toString());
+    AuditChange emailChange = requireChange(event, "email.value");
+    assertNull(emailChange.getOldValue());
+    assertNull(emailChange.getNewValue());
+    AuditChange usernameChange = requireChange(event, "username.value");
+    assertNull(usernameChange.getOldValue());
+    assertNull(usernameChange.getNewValue());
   }
 
   @Test
@@ -94,10 +117,11 @@ class AccountEndToEndTest {
 
     long count = QuarkusTransaction.requiringNew().call(() -> accountEntities.count());
     assertEquals(1, count);
+    assertEquals(1, audits.ofAction("identity.account.create").size());
   }
 
   @Test
-  void disablingAccountPersistsAndBlocksAuthenticationUntilReEnabled() {
+  void disablingAccountPersistsBlocksAuthRecordsAuditUntilReEnabled() {
     Account created = createAccount.create(ALICE_EMAIL, ALICE_USERNAME, PASSWORD_1);
 
     Account disabled = changeAccountStatus.disable(created.id());
@@ -106,16 +130,30 @@ class AccountEndToEndTest {
     assertTrue(
         authenticateAccount.authenticate(LoginIdentifier.parse("alice"), PASSWORD_1).isEmpty());
 
+    AuditRecorded disableEvent = audits.ofAction("identity.account.disable").getFirst().event();
+    assertEquals(AuditOutcome.SUCCESS, disableEvent.getOutcome());
+    assertEquals(created.id().toString(), disableEvent.getTargetId().toString());
+    AuditChange disableEnabled = requireChange(disableEvent, "enabled");
+    assertEquals("true", disableEnabled.getOldValue().toString());
+    assertEquals("false", disableEnabled.getNewValue().toString());
+
     Account enabled = changeAccountStatus.enable(created.id());
     assertTrue(enabled.enabled());
     assertTrue(getAccount.getById(created.id()).orElseThrow().enabled());
     assertEquals(
         Optional.of(enabled),
         authenticateAccount.authenticate(LoginIdentifier.parse("alice"), PASSWORD_1));
+
+    AuditRecorded enableEvent = audits.ofAction("identity.account.enable").getFirst().event();
+    assertEquals(AuditOutcome.SUCCESS, enableEvent.getOutcome());
+    assertEquals(created.id().toString(), enableEvent.getTargetId().toString());
+    AuditChange enableEnabled = requireChange(enableEvent, "enabled");
+    assertEquals("false", enableEnabled.getOldValue().toString());
+    assertEquals("true", enableEnabled.getNewValue().toString());
   }
 
   @Test
-  void changingPasswordRevokesPreviousInDatabaseAndBlocksReuse() {
+  void changingPasswordRevokesPreviousRecordsAuditAndBlocksReuse() {
     Account created = createAccount.create(ALICE_EMAIL, ALICE_USERNAME, PASSWORD_1);
 
     changePassword.changePassword(created.id(), PASSWORD_1, PASSWORD_2);
@@ -136,8 +174,27 @@ class AccountEndToEndTest {
     assertEquals(1, stored.stream().filter(c -> c.getRevokedAt() == null).count());
     assertEquals(1, stored.stream().filter(c -> c.getRevokedAt() != null).count());
 
+    List<RecordedIdentityAudits.Row> passwordAudits =
+        audits.ofAction("identity.account.change-password");
+    assertEquals(1, passwordAudits.size());
+    AuditRecorded passwordEvent = passwordAudits.getFirst().event();
+    assertEquals(AuditOutcome.SUCCESS, passwordEvent.getOutcome());
+    assertEquals("account", passwordEvent.getTargetType().toString());
+    assertEquals(created.id().toString(), passwordEvent.getTargetId().toString());
+    assertTrue(passwordEvent.getChanges().isEmpty());
+
     assertThrows(
         IllegalArgumentException.class,
         () -> changePassword.changePassword(created.id(), PASSWORD_2, PASSWORD_1));
+  }
+
+  private static AuditChange requireChange(AuditRecorded event, String path) {
+    AuditChange found =
+        event.getChanges().stream()
+            .filter(c -> c.getFieldPath().toString().equals(path))
+            .findFirst()
+            .orElse(null);
+    assertNotNull(found, () -> "Missing audit change for path " + path);
+    return found;
   }
 }

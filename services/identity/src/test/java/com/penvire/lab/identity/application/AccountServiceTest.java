@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.penvire.lab.audit.TestAuditScope;
 import com.penvire.lab.clock.MutableClock;
 import com.penvire.lab.identity.application.port.out.account.AccountPersistencePort;
 import com.penvire.lab.identity.application.port.out.account.PasswordCredentialPersistencePort;
@@ -39,7 +40,8 @@ class AccountServiceTest {
   private final InMemoryPasswordCredentials credentials = new InMemoryPasswordCredentials();
   private final CountingFakeHasher hasher = new CountingFakeHasher();
   private final AccountService service =
-      new AccountService(UUID::randomUUID, accounts, credentials, hasher, clock);
+      new AccountService(
+          UUID::randomUUID, accounts, credentials, hasher, clock, new TestAuditScope());
 
   @Test
   void createsEnabledAccountWithActiveHashedCredential() {

@@ -3,15 +3,11 @@ package com.penvire.lab.identity.application;
 import com.penvire.lab.identity.application.port.in.signingkey.GetJwksSetUseCase;
 import com.penvire.lab.identity.application.port.in.signingkey.RevokeSigningKeyUseCase;
 import com.penvire.lab.identity.application.port.in.signingkey.RotateSigningKeyUseCase;
-import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyGeneratorPort;
 import com.penvire.lab.identity.application.port.out.signingkey.SigningKeyPersistencePort;
 import com.penvire.lab.identity.config.JwksConfig;
-import com.penvire.lab.identity.config.JwtConfig;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
-import com.penvire.lab.identity.domain.signingkey.SigningKeyLifetime;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyPhase;
-import com.penvire.lab.persistence.IdGenerator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 import java.time.Clock;
@@ -25,24 +21,18 @@ public class SigningKeyService
     implements GetJwksSetUseCase, RotateSigningKeyUseCase, RevokeSigningKeyUseCase {
   private final SigningKeyPersistencePort signingKeys;
   private final Clock clock;
-  private final SigningKeyGeneratorPort signingKeyGenerator;
-  private final IdGenerator idGenerator;
+  private final SigningKeyLifecycle lifecycle;
 
-  private final JwtConfig jwtConfig;
   private final JwksConfig jwksConfig;
 
   public SigningKeyService(
       SigningKeyPersistencePort signingKeys,
       Clock clock,
-      SigningKeyGeneratorPort signingKeyGenerator,
-      IdGenerator idGenerator,
-      JwtConfig jwtConfig,
+      SigningKeyLifecycle lifecycle,
       JwksConfig jwksConfig) {
     this.signingKeys = signingKeys;
     this.clock = clock;
-    this.signingKeyGenerator = signingKeyGenerator;
-    this.idGenerator = idGenerator;
-    this.jwtConfig = jwtConfig;
+    this.lifecycle = lifecycle;
     this.jwksConfig = jwksConfig;
   }
 
@@ -75,11 +65,11 @@ public class SigningKeyService
             pending
                 .map(key -> Duration.between(now, key.lifetime().signFrom()))
                 .orElseGet(jwksConfig::signingPeriod);
-        insertKey(alg, now, now, signingPeriod);
+        lifecycle.create(alg, now, now, signingPeriod);
       } else if (pending.isEmpty()) {
         var handoff = signerKey.get().lifetime().signUntil();
         if (!now.isBefore(handoff.minus(jwksConfig.leadTime()))) {
-          insertKey(alg, now, handoff, jwksConfig.signingPeriod());
+          lifecycle.create(alg, now, handoff, jwksConfig.signingPeriod());
         }
       }
     }
@@ -94,20 +84,10 @@ public class SigningKeyService
     var now = clock.instant();
     var signingKey = signingKeys.findSignerAt(algorithm, now);
 
-    signingKey.ifPresent(activeSigningKey -> signingKeys.revoke(activeSigningKey.key().id()));
+    signingKey.ifPresent(activeSigningKey -> lifecycle.revoke(activeSigningKey.key(), now));
 
     cleanUp(now);
     rotate();
-  }
-
-  private void insertKey(
-      SigningKeyAlgorithm alg, Instant publishAt, Instant signingAt, Duration signingPeriod) {
-    var pair = signingKeyGenerator.generate(alg);
-    var lifetime =
-        SigningKeyLifetime.starting(
-            publishAt, signingAt, signingPeriod, jwtConfig.accessToken().lifetime());
-    var key = new SigningKey(idGenerator.next(), alg, pair.getPublic(), lifetime);
-    signingKeys.insert(key, pair.getPrivate());
   }
 
   private void cleanUp(Instant now) {
