@@ -1,4 +1,4 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.jws;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -6,8 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.penvire.lab.jwt.jws.JwsVerificationException;
-import com.penvire.lab.jwt.jws.Rs256JwsVerifier;
+import com.penvire.lab.jwt.validation.JwtTestTokens;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;

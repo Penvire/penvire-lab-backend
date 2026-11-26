@@ -1,4 +1,4 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.validation;
 
 public enum JwtType {
   ACCESS("at+jwt"),

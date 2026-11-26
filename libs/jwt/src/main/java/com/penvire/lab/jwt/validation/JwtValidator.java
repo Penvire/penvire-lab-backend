@@ -1,9 +1,10 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.penvire.lab.jwt.jws.JwsDecoder;
 import com.penvire.lab.jwt.jws.JwsVerificationException;
 import com.penvire.lab.jwt.jws.JwsVerifier;
+import com.penvire.lab.jwt.jws.ParsedJws;
 import com.penvire.lab.jwt.jws.StrictJwtJson;
 import java.io.IOException;
 import java.security.PublicKey;

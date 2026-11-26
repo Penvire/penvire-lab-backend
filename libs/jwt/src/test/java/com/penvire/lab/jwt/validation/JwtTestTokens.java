@@ -1,4 +1,4 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,20 +25,20 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 
-final class JwtTestTokens {
+public final class JwtTestTokens {
 
   static final String ISSUER = "https://identity.example.test";
   static final String AUDIENCE = "tenant-api";
   static final String KEY_ID = "test-signing-key";
   static final Instant NOW = Instant.parse("2030-01-01T00:00:00Z");
   static final Clock CLOCK = Clock.fixed(NOW, ZoneOffset.UTC);
-  static final KeyPair RSA_KEYS = generateKeys("RSA", 2048);
-  static final KeyPair ML_DSA_KEYS = generateKeys("ML-DSA-65", 0);
+  public static final KeyPair RSA_KEYS = generateKeys("RSA", 2048);
+  public static final KeyPair ML_DSA_KEYS = generateKeys("ML-DSA-65", 0);
   static final ObjectMapper JSON = new ObjectMapper();
 
   private JwtTestTokens() {}
 
-  static ObjectNode header(JwtType type, String algorithm) {
+  public static ObjectNode header(JwtType type, String algorithm) {
     return JSON.createObjectNode()
         .put("alg", algorithm)
         .put("typ", type.headerValue())
@@ -116,7 +116,7 @@ final class JwtTestTokens {
     };
   }
 
-  static String encode(String text) {
+  public static String encode(String text) {
     return Base64.getUrlEncoder()
         .withoutPadding()
         .encodeToString(text.getBytes(StandardCharsets.UTF_8));
@@ -126,13 +126,13 @@ final class JwtTestTokens {
     return Objects.requireNonNull(JSON.readTree(text));
   }
 
-  static String fixtureText(String name) throws IOException {
+  public static String fixtureText(String name) throws IOException {
     try (InputStream input = fixtureStream(name)) {
       return new String(input.readAllBytes(), StandardCharsets.UTF_8).stripTrailing();
     }
   }
 
-  static PublicKey fixturePublicKey() throws IOException, GeneralSecurityException {
+  public static PublicKey fixturePublicKey() throws IOException, GeneralSecurityException {
     var properties = new Properties();
     try (InputStream input = fixtureStream("public-key.properties")) {
       properties.load(input);

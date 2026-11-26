@@ -1,7 +1,6 @@
 package com.penvire.lab.jwt.jws;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.penvire.lab.jwt.ParsedJws;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

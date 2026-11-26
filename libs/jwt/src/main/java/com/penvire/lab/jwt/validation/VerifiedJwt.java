@@ -1,4 +1,4 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
