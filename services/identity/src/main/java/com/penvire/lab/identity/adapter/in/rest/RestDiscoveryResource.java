@@ -1,6 +1,6 @@
 package com.penvire.lab.identity.adapter.in.rest;
 
-import com.penvire.lab.identity.application.port.in.GetJwksSetUseCase;
+import com.penvire.lab.identity.application.port.in.signingkey.GetJwksSetUseCase;
 import com.penvire.lab.identity.config.IdentityConfig;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.server.api.DiscoveryApi;

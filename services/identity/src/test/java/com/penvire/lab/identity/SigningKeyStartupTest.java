@@ -4,8 +4,8 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.penvire.lab.identity.adapter.in.rest.JwkMapper;
-import com.penvire.lab.identity.application.port.in.IssueAccessTokenUseCase;
-import com.penvire.lab.identity.application.port.in.RotateSigningKeyUseCase;
+import com.penvire.lab.identity.application.port.in.jwt.IssueAccessTokenUseCase;
+import com.penvire.lab.identity.application.port.in.signingkey.RotateSigningKeyUseCase;
 import com.penvire.lab.identity.config.IdentityConfig;
 import com.penvire.lab.identity.config.JwksConfig;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;

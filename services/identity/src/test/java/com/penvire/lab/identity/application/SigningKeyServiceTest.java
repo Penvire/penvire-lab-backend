@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.penvire.lab.audit.TestAuditScope;
 import com.penvire.lab.clock.MutableClock;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
@@ -215,13 +216,14 @@ class SigningKeyServiceTest {
   }
 
   private SigningKeyService service(Set<SigningKeyAlgorithm> algorithms) {
-    return new SigningKeyService(
-        signingKeys,
-        clock,
-        generator,
-        UUID::randomUUID,
-        new TestJwtConfig(TOKEN_LIFETIME),
-        new TestJwksConfig(algorithms));
+    var lifecycle =
+        new SigningKeyLifecycle(
+            signingKeys,
+            generator,
+            UUID::randomUUID,
+            new TestJwtConfig(TOKEN_LIFETIME),
+            new TestAuditScope());
+    return new SigningKeyService(signingKeys, clock, lifecycle, new TestJwksConfig(algorithms));
   }
 
   private static SigningKey only(List<SigningKey> keys) {

@@ -17,7 +17,6 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificData;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.avro.util.ClassSecurityValidator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 import org.jspecify.annotations.Nullable;
@@ -27,12 +26,7 @@ import org.jspecify.annotations.Nullable;
 class EventDecoder {
 
   static {
-    // Avro 1.12 instantiates only trusted classes (CVE-2024-47561). Trust the generated classes of
-    // Penvire Lab event packages, nested records and enums included, and nothing else.
-    ClassSecurityValidator.setGlobal(
-        ClassSecurityValidator.composite(
-            ClassSecurityValidator.getGlobal(),
-            type -> EventType.isEventNamespace(type.getPackageName())));
+    EventType.ensureTrusted();
   }
 
   private final SchemaCatalog schemas;

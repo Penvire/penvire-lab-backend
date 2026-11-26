@@ -3,6 +3,7 @@
 quarkus = "3.40.1"
 openapi-generator = "7.27.0"
 identity-contract = "0.2.0"
+identity-events = "0.2.1"
 
 # Java source generation and nullness annotations.
 lombok = "1.18.48"
@@ -33,6 +34,9 @@ jug = "5.2.0"
 
 # Reads compiled @Audited methods for the audit manifest; the version the Quarkus BOM pins.
 jandex = "3.6.0"
+
+# Pure-Java cryptography provider (Argon2id password hashing).
+bouncycastle = "1.87"
 
 [libraries]
 # Quarkus BOM and its Gradle integration.
@@ -66,3 +70,6 @@ jug = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "jug" }
 
 # Class file index without class loading.
 jandex = { module = "io.smallrye:jandex", version.ref = "jandex" }
+
+# Pure-Java cryptography provider (Argon2id password hashing).
+bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }

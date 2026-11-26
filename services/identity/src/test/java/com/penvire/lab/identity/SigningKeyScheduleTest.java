@@ -4,7 +4,7 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntityRepository;
+import com.penvire.lab.identity.adapter.out.persistence.entity.signingkey.SigningKeyEntityRepository;
 import com.penvire.lab.identity.config.JwksConfig;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.identity.server.model.Jwk;

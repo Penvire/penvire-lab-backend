@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.penvire.lab.audit.TestAuditScope;
 import com.penvire.lab.clock.MutableClock;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
@@ -23,13 +24,18 @@ class SigningKeyRevocationTest {
   private final MutableClock clock = MutableClock.at(NOW);
   private final InMemorySigningKeys signingKeys = new InMemorySigningKeys(clock);
   private final FixedKeyPairs generator = new FixedKeyPairs();
+  private final SigningKeyLifecycle lifecycle =
+      new SigningKeyLifecycle(
+          signingKeys,
+          generator,
+          UUID::randomUUID,
+          new TestJwtConfig(TOKEN_LIFETIME),
+          new TestAuditScope());
   private final SigningKeyService service =
       new SigningKeyService(
           signingKeys,
           clock,
-          generator,
-          UUID::randomUUID,
-          new TestJwtConfig(TOKEN_LIFETIME),
+          lifecycle,
           new TestJwksConfig(Set.of(SigningKeyAlgorithm.ML_DSA_65, SigningKeyAlgorithm.RS256)));
 
   @Test

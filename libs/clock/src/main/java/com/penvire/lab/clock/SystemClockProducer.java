@@ -5,6 +5,7 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
 import java.time.Clock;
+import java.time.Duration;
 
 /**
  * The system clock in UTC. A service replaces it by producing its own Clock bean, for example a
@@ -17,6 +18,6 @@ final class SystemClockProducer {
   @Singleton
   @DefaultBean
   Clock systemClock() {
-    return Clock.systemUTC();
+    return Clock.tick(Clock.systemUTC(), Duration.ofNanos(1_000));
   }
 }

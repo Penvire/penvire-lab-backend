@@ -1,0 +1,5 @@
+/** Identity account persistence adapters. */
+@NullMarked
+package com.penvire.lab.identity.adapter.out.persistence.adapter.account;
+
+import org.jspecify.annotations.NullMarked;

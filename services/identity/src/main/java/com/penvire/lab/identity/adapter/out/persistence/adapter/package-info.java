@@ -1,4 +1,4 @@
-/** Identity JWS persistence adapters. */
+/** Identity persistence adapters. */
 @NullMarked
 package com.penvire.lab.identity.adapter.out.persistence.adapter;
 

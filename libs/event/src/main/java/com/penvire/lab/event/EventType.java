@@ -4,6 +4,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.avro.Schema;
+import org.apache.avro.util.ClassSecurityValidator;
 
 /**
  * The CloudEvents {@code type} and {@code source} of an event, derived from its Avro full name
@@ -14,6 +15,17 @@ public record EventType(String service, String event, int major) {
 
   private static final Pattern NAMESPACE =
       Pattern.compile("dev\\.penvire\\.lab\\.([a-z][a-z0-9-]*)\\.events\\.v([1-9][0-9]*)");
+
+  static {
+    // Avro 1.12 instantiates only trusted classes (CVE-2024-47561). Trust the generated classes of
+    // Penvire Lab event packages, nested records and enums included, and nothing else.
+    ClassSecurityValidator.setGlobal(
+        ClassSecurityValidator.composite(
+            ClassSecurityValidator.getGlobal(), type -> isEventNamespace(type.getPackageName())));
+  }
+
+  /** Ensures the Avro {@link ClassSecurityValidator} allowlist for event packages is installed. */
+  public static void ensureTrusted() {}
 
   /**
    * Derives the event type from a generated schema.

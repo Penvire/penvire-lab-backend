@@ -3,9 +3,9 @@ package com.penvire.lab.identity.application;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.penvire.lab.identity.adapter.out.crypto.AccessTokenSignerAdapter;
-import com.penvire.lab.identity.adapter.out.crypto.Signer;
-import com.penvire.lab.identity.application.port.out.TokenSignerPort;
+import com.penvire.lab.identity.adapter.out.crypto.jwt.AccessTokenSignerAdapter;
+import com.penvire.lab.identity.adapter.out.crypto.jwt.Signer;
+import com.penvire.lab.identity.application.port.out.jwt.TokenSignerPort;
 import com.penvire.lab.identity.domain.jwt.AccessTokenClaims;
 import com.penvire.lab.identity.domain.signingkey.ActiveSigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
