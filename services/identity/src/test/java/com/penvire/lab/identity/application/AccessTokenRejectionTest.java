@@ -32,6 +32,9 @@ class AccessTokenRejectionTest {
   private static final ActiveSigningKey SIGNER =
       TestSigningKeys.active(
           SigningKeyAlgorithm.ML_DSA_65, TestSigningKeys.pair(SigningKeyAlgorithm.ML_DSA_65), NOW);
+  private static final ActiveSigningKey RSA_SIGNER =
+      TestSigningKeys.active(
+          SigningKeyAlgorithm.RS256, TestSigningKeys.pair(SigningKeyAlgorithm.RS256), NOW);
 
   @ParameterizedTest
   @CsvSource({
@@ -78,6 +81,34 @@ class AccessTokenRejectionTest {
   }
 
   @Test
+  void refusesToSignAnRs256KeyWithAnMlDsaPrivateKey() throws Exception {
+    var wrongPrivateKey = KeyPairGenerator.getInstance("ML-DSA-65").generateKeyPair().getPrivate();
+    var mismatched = new ActiveSigningKey(RSA_SIGNER.key(), wrongPrivateKey);
+    var signer = new AccessTokenSignerAdapter(new Signer());
+    var claims = claimsWithTimes(NOW, NOW, NOW.plusSeconds(300));
+
+    assertThrows(IllegalStateException.class, () -> signer.sign(claims, mismatched));
+  }
+
+  @Test
+  void refusesToIssueRs256WhenOnlyAnMlDsaKeySigns() {
+    var issuer = issuer(new AccessTokenSignerAdapter(new Signer()), SIGNER);
+
+    assertThrows(
+        IllegalStateException.class,
+        () -> issuer.issueAccessToken(SUBJECT, CLIENT, AUDIENCE, SigningKeyAlgorithm.RS256));
+  }
+
+  @Test
+  void refusesToIssueMlDsaWhenOnlyAnRs256KeySigns() {
+    var issuer = issuer(new AccessTokenSignerAdapter(new Signer()), RSA_SIGNER);
+
+    assertThrows(
+        IllegalStateException.class,
+        () -> issuer.issueAccessToken(SUBJECT, CLIENT, AUDIENCE, SigningKeyAlgorithm.ML_DSA_65));
+  }
+
+  @Test
   void rejectsExpiryAtIssuanceEvenWhenNotBeforeIsEarlier() {
     assertThrows(
         IllegalArgumentException.class, () -> claimsWithTimes(NOW, NOW.minusSeconds(1), NOW));
@@ -94,12 +125,12 @@ class AccessTokenRejectionTest {
   }
 
   private static TokenService issuer(TokenSignerPort signer) {
+    return issuer(signer, SIGNER);
+  }
+
+  private static TokenService issuer(TokenSignerPort signer, ActiveSigningKey key) {
     return new TokenService(
-        JWT_CONFIG,
-        new TestIdentityConfig(ISSUER),
-        CLOCK,
-        signer,
-        TestSigningKeys.onlySigner(SIGNER));
+        JWT_CONFIG, new TestIdentityConfig(ISSUER), CLOCK, signer, TestSigningKeys.onlySigner(key));
   }
 
   private static AccessTokenClaims claimsWithTimes(
