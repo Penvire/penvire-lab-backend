@@ -1,12 +1,11 @@
-package com.penvire.lab.jwt;
+package com.penvire.lab.jwt.jws;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.penvire.lab.jwt.jws.JwsDecoder;
-import com.penvire.lab.jwt.jws.JwsVerificationException;
+import com.penvire.lab.jwt.validation.JwtTestTokens;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
