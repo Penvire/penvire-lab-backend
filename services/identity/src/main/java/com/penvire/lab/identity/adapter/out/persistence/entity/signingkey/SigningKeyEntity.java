@@ -1,4 +1,4 @@
-package com.penvire.lab.identity.adapter.out.persistence.entity;
+package com.penvire.lab.identity.adapter.out.persistence.entity.signingkey;
 
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import jakarta.persistence.Column;

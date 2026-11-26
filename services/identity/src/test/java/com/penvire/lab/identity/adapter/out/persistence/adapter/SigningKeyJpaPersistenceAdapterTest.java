@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntityRepository;
+import com.penvire.lab.identity.adapter.out.persistence.entity.signingkey.SigningKeyEntityRepository;
 import com.penvire.lab.identity.application.port.out.SigningKeyPersistencePort;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;

@@ -1,6 +1,6 @@
-package com.penvire.lab.identity.adapter.out.persistence.mapper;
+package com.penvire.lab.identity.adapter.out.persistence.mapper.signingkey;
 
-import com.penvire.lab.identity.adapter.out.persistence.entity.SigningKeyEntity;
+import com.penvire.lab.identity.adapter.out.persistence.entity.signingkey.SigningKeyEntity;
 import com.penvire.lab.identity.domain.signingkey.SigningKey;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyAlgorithm;
 import com.penvire.lab.identity.domain.signingkey.SigningKeyLifetime;
