@@ -28,6 +28,7 @@ include(":libs:jwt")
 include(":libs:event")
 include(":libs:audit")
 include(":libs:security")
+include(":libs:fga")
 
 // Services
 include(":services:identity")

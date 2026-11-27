@@ -47,5 +47,6 @@ Add `## Considered options` only when the rejected alternatives are worth rememb
 | [0007](0007-signing-keys-encrypted-in-identity-database.md) | Signing keys stored encrypted in Identity's database and rotated every 30 days | accepted, partly superseded by ADR-0009 |
 | [0008](0008-audited-actions-choose-recorded-failures.md) | Audited actions choose which failures they record, through two interceptors | accepted |
 | [0009](0009-opaque-refresh-tokens-and-revoked-signing-keys.md) | Opaque refresh tokens, and revoked signing keys kept until they expire | accepted |
+| [0010](0010-fine-grained-authorization-with-openfga.md) | Fine-grained authorization with OpenFGA | accepted |
 
 Add every new ADR to this index in the same pull request.
