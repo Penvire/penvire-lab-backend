@@ -127,7 +127,7 @@ class AccountPersistenceTest {
   }
 
   @Test
-  void changePasswordRevokesActiveAndRecentReturnsNewestFirstWithLimit() {
+  void revokingThenInsertingInSameTransactionUpdatesActiveAndRecentReturnsNewestFirst() {
     Account alice = insertAccount("alice@example.com", "alice");
     PasswordCredential c1 =
         PasswordCredential.active(UUID.randomUUID(), alice.id(), new PasswordHash("hash-0001"), T0);
@@ -140,9 +140,15 @@ class AccountPersistenceTest {
 
     QuarkusTransaction.requiringNew().run(() -> credentials.insert(c1));
     QuarkusTransaction.requiringNew()
-        .run(() -> credentials.changePassword(alice.id(), c2, T0.plusSeconds(10)));
+        .run(() -> {
+          credentials.update(c1.revoke(T0.plusSeconds(10)));
+          credentials.insert(c2);
+        });
     QuarkusTransaction.requiringNew()
-        .run(() -> credentials.changePassword(alice.id(), c3, T0.plusSeconds(20)));
+        .run(() -> {
+          credentials.update(c2.revoke(T0.plusSeconds(20)));
+          credentials.insert(c3);
+        });
 
     Optional<PasswordCredential> active =
         QuarkusTransaction.requiringNew().call(() -> credentials.findActiveByAccountId(alice.id()));
@@ -160,16 +166,14 @@ class AccountPersistenceTest {
   }
 
   @Test
-  void changePasswordThrowsWhenNoActiveCredentialExists() {
+  void updateThrowsWhenCredentialDoesNotExist() {
     Account alice = insertAccount("alice@example.com", "alice");
-    PasswordCredential replacement =
+    PasswordCredential missing =
         PasswordCredential.active(UUID.randomUUID(), alice.id(), new PasswordHash("hash-0001"), T0);
 
     assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            QuarkusTransaction.requiringNew()
-                .run(() -> credentials.changePassword(alice.id(), replacement, T0)));
+        IllegalStateException.class,
+        () -> QuarkusTransaction.requiringNew().run(() -> credentials.update(missing)));
   }
 
   private Account insertAccount(String email, String username) {

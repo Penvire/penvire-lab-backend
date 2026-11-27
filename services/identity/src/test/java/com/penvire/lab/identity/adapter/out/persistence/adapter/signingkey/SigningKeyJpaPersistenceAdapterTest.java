@@ -59,7 +59,7 @@ class SigningKeyJpaPersistenceAdapterTest {
                         assertEquals(lifetime, loaded.lifetime());
                         assertTrue(keys.findSignerAt(algorithm, observedAt).isPresent());
 
-                        QuarkusTransaction.requiringNew().run(() -> keys.revoke(id));
+                        QuarkusTransaction.requiringNew().run(() -> keys.revoke(id, observedAt));
                         keys.retire(loaded.id(), Duration.ofMinutes(5));
                       }));
       assertEquals("Only a signing key that currently signs can be retired", failure.getMessage());

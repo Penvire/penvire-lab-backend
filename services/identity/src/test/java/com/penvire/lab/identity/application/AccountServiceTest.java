@@ -181,6 +181,60 @@ class AccountServiceTest {
         () -> service.changePassword(created.id(), PASSWORD_1, PASSWORD_2));
   }
 
+  @Test
+  void rejectsReuseOfLastFivePasswordsAndAllowsSixthOldest() {
+    Account created = service.create(ALICE_EMAIL, ALICE_USERNAME, PASSWORD_1);
+    String[] passwords = {
+      PASSWORD_1,
+      PASSWORD_2,
+      "third-password-value",
+      "fourth-password-value",
+      "fifth-password-value",
+      "sixth-password-value"
+    };
+
+    for (int i = 1; i <= 4; i++) {
+      clock.advance(Duration.ofMinutes(1));
+      service.changePassword(created.id(), passwords[i - 1], passwords[i]);
+    }
+
+    // Active credential is passwords[4]; last 5 are passwords[0..4].
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> service.changePassword(created.id(), passwords[4], passwords[0]));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> service.changePassword(created.id(), passwords[4], passwords[4]));
+
+    clock.advance(Duration.ofMinutes(1));
+    service.changePassword(created.id(), passwords[4], passwords[5]);
+
+    // Last 5 are now passwords[1..5], so passwords[1] is rejected and passwords[0] is allowed.
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> service.changePassword(created.id(), passwords[5], passwords[1]));
+
+    clock.advance(Duration.ofMinutes(1));
+    service.changePassword(created.id(), passwords[5], passwords[0]);
+    assertEquals(
+        Optional.of(created), service.authenticate(LoginIdentifier.parse("alice"), passwords[0]));
+  }
+
+  @Test
+  void missingActiveCredentialIsRejectedInChangePasswordAndTimingEqualizedInAuthenticate() {
+    Account noPassword =
+        accounts.insert(new Account(UUID.randomUUID(), ALICE_EMAIL, ALICE_USERNAME, true, NOW));
+
+    int beforeAuth = hasher.verifyCalls;
+    assertTrue(service.authenticate(LoginIdentifier.parse("alice"), PASSWORD_1).isEmpty());
+    assertEquals(beforeAuth + 1, hasher.verifyCalls);
+
+    assertThrows(
+        IllegalStateException.class,
+        () -> service.changePassword(noPassword.id(), PASSWORD_1, PASSWORD_2));
+    assertTrue(credentials.findActiveByAccountId(noPassword.id()).isEmpty());
+  }
+
   private static final class InMemoryAccounts implements AccountPersistencePort {
     private final Map<UUID, Account> byId = new LinkedHashMap<>();
 
@@ -223,10 +277,12 @@ class AccountServiceTest {
     }
 
     @Override
-    public void changePassword(UUID accountId, PasswordCredential newCredential, Instant now) {
-      findActiveByAccountId(accountId)
-          .ifPresent(active -> byId.put(active.id(), active.revoke(now)));
-      byId.put(newCredential.id(), newCredential);
+    public PasswordCredential update(PasswordCredential credential) {
+      if (!byId.containsKey(credential.id())) {
+        throw new IllegalStateException("No stored credential with ID " + credential.id());
+      }
+      byId.put(credential.id(), credential);
+      return credential;
     }
 
     @Override

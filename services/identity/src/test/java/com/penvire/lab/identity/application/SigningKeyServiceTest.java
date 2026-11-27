@@ -200,7 +200,7 @@ class SigningKeyServiceTest {
     var revoked = only(signingKeys.keys());
 
     clock.advance(Duration.ofDays(3));
-    signingKeys.revoke(revoked.id());
+    signingKeys.revoke(revoked.id(), clock.instant());
     service.rotate();
 
     var now = clock.instant();

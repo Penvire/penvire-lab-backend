@@ -20,7 +20,7 @@ public interface SigningKeyPersistencePort {
   void retire(UUID id, Duration retention);
 
   /** Revokes the current stored key immediately and erases its private part. */
-  void revoke(UUID id);
+  void revoke(UUID id, Instant revokeAt);
 
   /** The keys in the JWKS at {@code now}; tampered rows are left out. */
   List<SigningKey> findPublishedAt(Instant now);
