@@ -4,7 +4,8 @@ plugins {
 }
 
 dependencies {
-    api("io.quarkiverse.httpproblem:quarkus-http-problem")
+    // Only libs/problem sees the extension; other modules extend ProblemException.
+    implementation("io.quarkiverse.httpproblem:quarkus-http-problem")
     implementation(project(":libs:observability"))
     implementation("io.quarkus:quarkus-rest-jackson")
     testImplementation("io.quarkus:quarkus-hibernate-validator")

@@ -25,6 +25,7 @@ class FgaProblemResponseTest {
         .statusCode(503)
         .contentType("application/problem+json")
         .header("X-Trace-Id", TRACE_ID)
+        .body("type", equalTo("urn:penvire:problem:fga.unavailable"))
         .body("status", equalTo(503))
         .body("title", equalTo("Authorization service unavailable"))
         .body("traceId", equalTo(TRACE_ID))
@@ -35,7 +36,7 @@ class FgaProblemResponseTest {
   }
 
   @Test
-  void leavesPlainFgaExceptionAsInternalServerError() {
+  void mapsPlainFgaExceptionToAuthorizationErrorProblem() {
     given()
         .header("traceparent", TRACEPARENT)
         .when()
@@ -44,6 +45,8 @@ class FgaProblemResponseTest {
         .statusCode(500)
         .contentType("application/problem+json")
         .header("X-Trace-Id", TRACE_ID)
+        .body("type", equalTo("urn:penvire:problem:fga.error"))
+        .body("title", equalTo("Authorization error"))
         .body("status", equalTo(500))
         .body("traceId", equalTo(TRACE_ID))
         .body(not(containsString("unknown relation")))
