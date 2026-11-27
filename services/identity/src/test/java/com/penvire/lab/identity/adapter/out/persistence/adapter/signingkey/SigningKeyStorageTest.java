@@ -303,7 +303,8 @@ class SigningKeyStorageTest {
                 () -> inTransaction(() -> keys.retire(key.id(), Duration.ofMinutes(5)))),
         () ->
             assertThrows(
-                IllegalStateException.class, () -> inTransaction(() -> keys.revoke(key.id()))));
+                IllegalStateException.class,
+                () -> inTransaction(() -> keys.revoke(key.id(), now))));
   }
 
   @Test
@@ -319,7 +320,7 @@ class SigningKeyStorageTest {
   @Test
   void doesNotRepublishARevokedKeyWhoseRevocationWasRemovedByHand() {
     var key = stored(SigningKeyAlgorithm.ML_DSA_65, current());
-    inTransaction(() -> keys.revoke(key.id()));
+    inTransaction(() -> keys.revoke(key.id(), now));
 
     sql("update signing_keys set revoked_at = null where id = :id", key.id());
 
@@ -393,13 +394,13 @@ class SigningKeyStorageTest {
   void revokingErasesThePrivateKeyAndUnpublishesTheKeyAtOnce() {
     var key = stored(SigningKeyAlgorithm.ML_DSA_65, current());
 
-    inTransaction(() -> keys.revoke(key.id()));
+    inTransaction(() -> keys.revoke(key.id(), now));
 
     var entity = entity(key.id());
     assertAll(
         () -> assertNull(entity.getEncryptedPrivateKey()),
         () -> assertNull(entity.getPrivateKeyNonce()),
-        () -> assertFalse(entity.getRevokedAt() == null),
+        () -> assertEquals(now, entity.getRevokedAt()),
         () -> assertEquals(key.lifetime().signUntil(), entity.getSignUntil()),
         () -> assertEquals(key.lifetime().publishUntil(), entity.getPublishUntil()),
         () -> assertEquals(List.of(), publishedAt(now)),
@@ -415,7 +416,7 @@ class SigningKeyStorageTest {
                 now.plus(Duration.ofHours(1)), now.plus(Duration.ofHours(2)),
                 now.plus(Duration.ofHours(3)), now.plus(Duration.ofHours(4))));
 
-    inTransaction(() -> keys.revoke(future.id()));
+    inTransaction(() -> keys.revoke(future.id(), now));
 
     assertEquals(List.of(), publishedAt(now.plus(Duration.ofHours(2))));
     assertNull(entity(future.id()).getEncryptedPrivateKey());
@@ -424,21 +425,23 @@ class SigningKeyStorageTest {
   @Test
   void cannotRevokeTwice() {
     var key = stored(SigningKeyAlgorithm.ML_DSA_65, current());
-    inTransaction(() -> keys.revoke(key.id()));
+    inTransaction(() -> keys.revoke(key.id(), now));
 
-    assertThrows(IllegalStateException.class, () -> inTransaction(() -> keys.revoke(key.id())));
+    assertThrows(
+        IllegalStateException.class, () -> inTransaction(() -> keys.revoke(key.id(), now)));
   }
 
   @Test
   void cannotRevokeAnUnknownKey() {
     assertThrows(
-        IllegalStateException.class, () -> inTransaction(() -> keys.revoke(UUID.randomUUID())));
+        IllegalStateException.class,
+        () -> inTransaction(() -> keys.revoke(UUID.randomUUID(), now)));
   }
 
   @Test
   void aRevokedKeyMakesRoomForANewSigner() {
     var revoked = stored(SigningKeyAlgorithm.ML_DSA_65, current());
-    inTransaction(() -> keys.revoke(revoked.id()));
+    inTransaction(() -> keys.revoke(revoked.id(), now));
 
     var replacement = stored(SigningKeyAlgorithm.ML_DSA_65, current());
 

@@ -80,7 +80,7 @@ final class TestSigningKeys {
     }
 
     @Override
-    public void revoke(UUID id) {
+    public void revoke(UUID id, Instant revokedAt) {
       throw new UnsupportedOperationException();
     }
 

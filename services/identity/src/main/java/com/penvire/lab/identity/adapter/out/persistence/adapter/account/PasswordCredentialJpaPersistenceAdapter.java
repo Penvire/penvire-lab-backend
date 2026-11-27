@@ -10,7 +10,6 @@ import com.penvire.lab.persistence.EntityMapper;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,17 +50,12 @@ public class PasswordCredentialJpaPersistenceAdapter
 
   @Override
   @Transactional(Transactional.TxType.MANDATORY)
-  public void changePassword(UUID accountId, PasswordCredential newCredential, Instant now) {
-    Optional<PasswordCredential> credential = findActiveByAccountId(accountId);
-    if (credential.isEmpty()) {
-      throw new IllegalArgumentException("No active password credential found for account");
-    }
-
-    update(credential.get().revoke(now));
-
+  public PasswordCredential update(PasswordCredential credential) {
+    PasswordCredential updated = super.update(credential);
+    // Flush so a revocation reaches PostgreSQL before an insert in the same transaction;
+    // Hibernate otherwise executes INSERT before UPDATE and hits the active-credential index.
     entities.flush();
-
-    insert(newCredential);
+    return updated;
   }
 
   @Override

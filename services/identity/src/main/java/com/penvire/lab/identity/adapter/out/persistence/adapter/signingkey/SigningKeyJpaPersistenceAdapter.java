@@ -73,9 +73,9 @@ public class SigningKeyJpaPersistenceAdapter implements SigningKeyPersistencePor
 
   @Override
   @Transactional(Transactional.TxType.MANDATORY)
-  public void revoke(UUID id) {
+  public void revoke(UUID id, Instant revokeAt) {
     var entity = lock(id);
-    var revoked = requireIntact(entity).revokeAt(clock.instant());
+    var revoked = requireIntact(entity).revokeAt(revokeAt);
     entity.setEncryptedPrivateKey(null);
     entity.setPrivateKeyNonce(null);
     storeLifetime(entity, revoked);

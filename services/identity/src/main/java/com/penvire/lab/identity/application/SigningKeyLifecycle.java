@@ -53,7 +53,7 @@ public class SigningKeyLifecycle {
 
   @Audited(value = "identity.signing-key.revoke", state = SigningKey.class, ignore = "publicKey")
   void revoke(SigningKey key, Instant revokedAt) {
-    signingKeys.revoke(key.id());
+    signingKeys.revoke(key.id(), revokedAt);
 
     audit.target(key.id().toString());
     audit.state(key, key.revokeAt(revokedAt));

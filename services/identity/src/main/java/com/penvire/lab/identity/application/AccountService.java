@@ -82,6 +82,7 @@ public class AccountService
         return Optional.empty();
       }
     } else {
+      passwordHasher.verify(rawPassword, dummyHash);
       return Optional.empty();
     }
 
@@ -95,10 +96,6 @@ public class AccountService
     Instant now = clock.instant();
     validatePassword(newPassword);
 
-    if (currentPassword.equals(newPassword)) {
-      throw new IllegalArgumentException("New password cannot be the same as the current password");
-    }
-
     Account account =
         getById(accountId)
             .orElseThrow(
@@ -107,15 +104,17 @@ public class AccountService
       throw new IllegalStateException("Account is disabled");
     }
 
-    var credential = passwordCredentials.findActiveByAccountId(accountId);
-    if (credential.isPresent()) {
-      if (!passwordHasher.verify(currentPassword, credential.get().passwordHash())) {
-        throw new IllegalArgumentException("Invalid password");
-      }
+    PasswordCredential active =
+        passwordCredentials
+            .findActiveByAccountId(accountId)
+            .orElseThrow(
+                () -> new IllegalStateException("No active password credential for account"));
+    if (!passwordHasher.verify(currentPassword, active.passwordHash())) {
+      throw new IllegalArgumentException("Invalid password");
     }
 
     var lastCredentials =
-        passwordCredentials.findRecentByAccountId(accountId, PASSWORD_REUSE_LIMIT - 1);
+        passwordCredentials.findRecentByAccountId(accountId, PASSWORD_REUSE_LIMIT);
     for (var oldCred : lastCredentials) {
       if (passwordHasher.verify(newPassword, oldCred.passwordHash())) {
         throw new IllegalArgumentException(
@@ -128,7 +127,8 @@ public class AccountService
     PasswordCredential newCredential =
         PasswordCredential.active(
             idGenerator.next(), accountId, passwordHasher.hash(newPassword), now);
-    passwordCredentials.changePassword(accountId, newCredential, now);
+    passwordCredentials.update(active.revoke(now));
+    passwordCredentials.insert(newCredential);
 
     audit.target(accountId.toString());
   }

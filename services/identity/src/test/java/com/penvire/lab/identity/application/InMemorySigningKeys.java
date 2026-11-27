@@ -68,9 +68,9 @@ final class InMemorySigningKeys implements SigningKeyPersistencePort {
   }
 
   @Override
-  public void revoke(UUID id) {
+  public void revoke(UUID id, Instant revokedAt) {
     calls.add("revoke");
-    keys.computeIfPresent(id, (ignored, key) -> key.revokeAt(clock.instant()));
+    keys.computeIfPresent(id, (ignored, key) -> key.revokeAt(revokedAt));
     privateKeys.remove(id);
   }
 

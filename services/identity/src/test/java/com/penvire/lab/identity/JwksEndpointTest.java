@@ -123,7 +123,7 @@ class JwksEndpointTest {
     var pair = generate("ML-DSA-65");
     var published = store(SigningKeyAlgorithm.ML_DSA_65, pair, current(now));
     var revoked = store(SigningKeyAlgorithm.RS256, generate("RSA"), current(now));
-    QuarkusTransaction.requiringNew().run(() -> keys.revoke(revoked.id()));
+    QuarkusTransaction.requiringNew().run(() -> keys.revoke(revoked.id(), now));
     store(
         SigningKeyAlgorithm.ML_DSA_65,
         pair,
