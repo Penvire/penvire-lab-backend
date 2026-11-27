@@ -14,7 +14,7 @@ services/<service>/     one Quarkus service each, hexagonal:
     application/        use cases and ports
     adapter/in/         REST
     adapter/out/        database, Kafka, other services
-libs/                   shared libraries, created when a second user appears
+libs/                   shared libraries for cross-cutting infrastructure and shared abstractions
 infrastructure/local/   Traefik, TLS and the observability stack
 docs/                   charter, architecture, adr/, tracks/, agents/
 GLOSSARY.md             domain vocabulary
