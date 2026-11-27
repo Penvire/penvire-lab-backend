@@ -81,11 +81,12 @@ in
     };
   };
 
-  packages = [ tls pkgs.mkcert pkgs.openssl pkgs.curl ];
+  packages = [ tls pkgs.mkcert pkgs.openssl pkgs.curl pkgs.openfga-cli ];
 
   env.CAROOT = "${config.devenv.state}/tls/ca";
   env.PENVIRE_HTTP_PORT = httpPort;
   env.PENVIRE_HTTPS_PORT = httpsPort;
+  env.FGA_API_URL = "http://127.0.0.1:8090";
 
   tasks."tls:certs" = {
     description = "Create or renew local gateway, identity and mTLS client certificates";
@@ -158,6 +159,31 @@ in
     exec ${pkgs.grafana}/bin/grafana server \
       --homepath ${pkgs.grafana}/share/grafana --config ${grafanaIni}
   '';
+
+  # --- Authorization: OpenFGA (SQLite locally; PostgreSQL in production) ---
+  processes.openfga = {
+    exec = ''
+      mkdir -p "$DEVENV_STATE/openfga"
+      fga_db="file:$DEVENV_STATE/openfga/openfga.db?_journal_mode=WAL&_busy_timeout=5000"
+      ${pkgs.openfga}/bin/openfga migrate \
+        --datastore-engine sqlite \
+        --datastore-uri "$fga_db"
+      exec ${pkgs.openfga}/bin/openfga run \
+        --datastore-engine sqlite \
+        --datastore-uri "$fga_db" \
+        --http-addr 127.0.0.1:8090 \
+        --grpc-addr 127.0.0.1:8091 \
+        --playground-enabled \
+        --playground-addr 127.0.0.1:3001 \
+        --trace-enabled \
+        --trace-otlp-endpoint 127.0.0.1:4317 \
+        --trace-sampler always_on
+    '';
+    ready.exec = ''
+      curl --silent --show-error --fail --max-time 2 --noproxy '*' \
+        "http://127.0.0.1:8090/healthz" > /dev/null
+    '';
+  };
 
   git-hooks.hooks = {
     conventional-commit = {

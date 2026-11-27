@@ -33,6 +33,7 @@ Git hooks run automatically: a commit-msg hook rejects messages that are not Con
 | What | Where |
 | --- | --- |
 | Traefik gateway (local CA, see `infrastructure/local/`) | `https://localhost:8443`, `$PENVIRE_HTTPS_PORT` if 8443 is taken |
+| OpenFGA (API / gRPC / Playground) | `http://localhost:8090` / `localhost:8091` / `http://localhost:3001/playground` |
 | OpenTelemetry Collector (OTLP) | `localhost:4317` (gRPC), `localhost:4318` (HTTP) |
 | Grafana (traces, logs, metrics; no login) | `http://localhost:3000` |
 | Tempo / Loki / Prometheus | `:3200` / `:3100` / `:9090` |
