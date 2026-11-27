@@ -16,12 +16,14 @@ import org.junit.jupiter.api.Test;
 class OpenFgaCdiTest {
 
   @Inject FgaClient fgaClient;
+  @Inject CurrentFgaSubject currentCaller;
   @Inject FgaConfig config;
 
   @Test
   void wiresOpenFgaAdapterAndConfigDefaults() {
     assertNotNull(fgaClient);
     assertInstanceOf(OpenFgaClientAdapter.class, fgaClient);
+    assertInstanceOf(SecurityIdentityCurrentFgaSubject.class, currentCaller);
     assertEquals(ConsistencyPreference.HIGHER_CONSISTENCY, config.consistency());
     assertEquals(Duration.ofSeconds(1), config.connectTimeout());
     assertEquals(Duration.ofSeconds(2), config.readTimeout());
