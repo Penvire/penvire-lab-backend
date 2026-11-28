@@ -4,6 +4,7 @@ quarkus = "3.40.1"
 openapi-generator = "7.27.0"
 identity-contract = "0.2.0"
 identity-events = "0.2.1"
+fga-model = "0.1.0"
 
 # Java source generation and nullness annotations.
 lombok = "1.18.48"
