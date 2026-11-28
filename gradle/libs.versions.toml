@@ -33,7 +33,7 @@ openapi-request-validator = "3.0.0"
 jug = "5.2.0"
 
 # Reads compiled @Audited methods for the audit manifest; the version the Quarkus BOM pins.
-jandex = "3.6.0"
+jandex = "3.6.1"
 
 # Pure-Java cryptography provider (Argon2id password hashing).
 bouncycastle = "1.87"
