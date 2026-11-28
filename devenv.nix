@@ -28,6 +28,11 @@ let
     runtimeInputs = [ pkgs.mkcert pkgs.openssl pkgs.coreutils pkgs.util-linux ];
     text = builtins.readFile ./infrastructure/local/tls-certs.sh;
   };
+  fgaBootstrap = pkgs.writeShellApplication {
+    name = "fga-bootstrap";
+    runtimeInputs = [ pkgs.curl pkgs.jq pkgs.coreutils pkgs.util-linux pkgs.gnused ];
+    text = builtins.readFile ./infrastructure/local/fga-bootstrap.sh;
+  };
   traefikConfig = pkgs.writeText "traefik.json" (builtins.toJSON {
     entryPoints = {
       web = {
@@ -81,7 +86,7 @@ in
     };
   };
 
-  packages = [ tls pkgs.mkcert pkgs.openssl pkgs.curl pkgs.openfga-cli ];
+  packages = [ tls fgaBootstrap pkgs.mkcert pkgs.openssl pkgs.curl pkgs.openfga-cli ];
 
   env.CAROOT = "${config.devenv.state}/tls/ca";
   env.PENVIRE_HTTP_PORT = httpPort;
@@ -91,6 +96,13 @@ in
   tasks."tls:certs" = {
     description = "Create or renew local gateway, identity and mTLS client certificates";
     exec = "tls-certs";
+  };
+
+  tasks."fga:bootstrap" = {
+    description = "Ensure the local OpenFGA store exists and uses the pinned fga-model";
+    after = [ "devenv:processes:openfga" ];
+    wantedBy = [ "devenv:processes:openfga" ];
+    exec = "fga-bootstrap";
   };
 
   processes.traefik = {

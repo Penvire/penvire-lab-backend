@@ -4,6 +4,11 @@ plugins {
     `java-test-fixtures`
 }
 
+val fgaModel = configurations.dependencyScope("fgaModel")
+val fgaModelFiles = configurations.resolvable("fgaModelFiles") {
+    extendsFrom(fgaModel.get())
+}
+
 dependencies {
     // FgaException extends ProblemException, so callers need it on their compile classpath.
     api(project(":libs:problem"))
@@ -16,10 +21,36 @@ dependencies {
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-security")
 
+    add(fgaModel.name, "dev.penvire.lab:fga-model:${libs.versions.fga.model.get()}@json")
+
     testFixturesApi(libs.jspecify)
     testFixturesImplementation("io.quarkus:quarkus-security")
+    testFixturesImplementation(libs.openfga.sdk) {
+        exclude(group = "io.opentelemetry")
+    }
+    testFixturesImplementation(libs.jackson.databind)
+    testFixturesImplementation("org.testcontainers:testcontainers")
 
     testImplementation(libs.jackson.databind)
     testImplementation("io.rest-assured:rest-assured")
-    testImplementation("org.testcontainers:testcontainers")
+}
+
+val fgaModelVersion = libs.versions.fga.model.get()
+
+val writeFgaModelMetadata = tasks.register<WriteProperties>("writeFgaModelMetadata") {
+    destinationFile = layout.buildDirectory.file("generated/fga-model-meta/fga/model.properties")
+    property("version", fgaModelVersion)
+}
+
+val prepareFgaModel = tasks.register<Sync>("prepareFgaModel") {
+    into(layout.buildDirectory.dir("generated/fga-model"))
+    from(fgaModelFiles) {
+        into("fga")
+        rename { "model.json" }
+    }
+    from(writeFgaModelMetadata.map { it.destinationFile.get().asFile.parentFile.parentFile })
+}
+
+sourceSets.main {
+    resources.srcDir(prepareFgaModel)
 }

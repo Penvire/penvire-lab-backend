@@ -1,4 +1,4 @@
-/** In-memory test fixtures for unit tests using {@code FgaClient}. */
+/** In-memory and Testcontainers test fixtures for tests using {@code FgaClient}. */
 @NullMarked
 package com.penvire.lab.fga;
 
