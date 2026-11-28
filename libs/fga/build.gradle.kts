@@ -5,7 +5,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":libs:problem"))
+    // FgaException extends ProblemException, so callers need it on their compile classpath.
+    api(project(":libs:problem"))
     implementation(libs.openfga.sdk) {
         // openfga-sdk pulls in opentelemetry-bom 1.67.0, upgrading Quarkus's OTel SDK past its
         // pinned opentelemetry-api-incubator 1.62.0-alpha. Let the Quarkus BOM own OpenTelemetry.
